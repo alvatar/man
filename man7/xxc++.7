@@ -1,0 +1,162 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH C++_NOTES 7 2009-04-23 "Reference" "Alvaro Castro Castilla"
+
+
+.SH --- SYNTAX QUIRKS
+.BR
+.SS "Why is a[5] == 5[a] true?"
+This is the direct artifact of arrays being pointers, "a" is a memory address. "a[5]" is the value that's 5 elements further from "a". The address of this element is "a + 5". This is equal to offset "a" from "5" elements at the beginning of the address space (5 + a).
+
+.in +4n
+.nf
+.BR "a[5]" "  /* Evaluates to *(a + 5) */"
+.BR "5[a]" "  /* Evaluates to *(5 + a) */"
+.fi
+.in
+
+.SS "Bit specific structure"
+To construct a bit specific structure, there are few things have to be taken care precisely.
+
+1. Variable type used
+
+2. Whether to use __attribute__((packed)) or not.
+
+.in +4n
+.nf
+.BR "typedef struct {"
+.BR "    char x:3,"
+.BR "         y:8,"
+.BR "         z:3;"
+.BR "} PointCodeA;"
+.BR "PointCodeA pc;"
+.BR "printf(""%d "",sizeof(pc));" "  /* The sizeof(pc) will return 3 bytes
+.RB "                            * because ""char"" is not large enough"
+.RB "                            * to store 2 bytes of data. */"
+.BR "typedef struct {"
+.BR "     unsigned long x:3,"
+.BR "                   y:8,"
+.BR "                   z:3;"
+.BR "} PointCodeB;"
+.BR "PointCodeB pc;"
+.BR "printf(""%d "",sizeof(pc));" "  /* The sizeof(pc) will return 4 bytes
+.RB "                            * because the remaining 2 bytes will be
+.RB "                            * padded with 0. */"
+.BR ""
+.BR "typedef struct {"
+.BR "     unsigned long x:3,"
+.BR "                   y:8,"
+.BR "                   z:3;"
+.BR "}__attribute__((packed)) PointCodeC;"
+.BR "PointCodeC pc;"
+.BR "printf(""%d "",sizeof(pc));" "  /* CORRECT: The sizeof(pc) will return
+.RB "                            * 2 bytes because the packed data is now 
+.RB "                            * exactly 14 bits. */"
+.BR ""
+.fi
+.in
+
+.SS "typename"
+First use:
+
+.in +4n
+.nf
+.RB "// Equivalent definitions:"
+.BR "template <class T>"
+.BR "template <typename T>"
+.fi
+.in
+
+Second use:
+
+.in +4n
+.nf
+.RB "// Imagine the following:"
+.BR "template <class T>"
+.BR "void foo() {"
+.BR "    T::iterator * iter;"
+.BR "}"
+.RB ""
+.RB "// This would work well:"
+.BR "class ContainsAType {"
+.BR "    class iterator { ... }:"
+.BR "};"
+.BR "foo<ContainsAType>();"
+.BR ""
+.RB "// But this would break the code:"
+.BR "class ContainsAValue {"
+.BR "    static int iterator;"
+.BR "};"
+.BR "foo<ContainsAValue>();" " /* Would parse foo() as a product of the"
+.RB "                        * static variable T::iterator and a variable"
+.RB "                        * called iter */"
+.RB ""
+.RB ""
+.RB "// Before a qualified dependent type, you need typename"
+.BR "template <class T>"
+.BR "void foo() {"
+.BR "    typename T::iterator * iter;"
+.BR "    typename T::iterator iter2;" " /* Even where there is no syntactical"
+.RB "                                 * ambiguity it must be used */"
+.BR "    typedef typename T::iterator iterator_type;" " // Even typedef need it"
+.BR "}"
+.fi
+.in
+
+
+.SH --- LANGUAGE CONCEPTS
+.BR
+.SS "Qualified and unqualified names"
+.BR
+.in +4n
+.nf
+.RB "// Qualified names:"
+.BR "std::cout << ""Hello!"";"
+.BR "using std::cout;" " // Introduces std::cout in every cout COMPROBAR!"
+.BR "cout << ""Hello!"";"
+.RB ""
+.RB "// Unqualified names:"
+.BR "cout << ""Hello!"";"
+.BR "using namespace std;" " // Makes it visible"
+.BR "cout << ""Hello!"";"
+.fi
+.in
+
+.SS "Dependent and non-dependent names"
+A dependent name is a name that depends on a template parameter. typedefs transfer the quality of being dependent.
+
+.in +4n
+.nf
+.RB "template <class T>
+.BR "class MyClass {"
+.RB "    // Declarations known at time of template declaration: non-dependent"
+.BR "    int i;"
+.BR "    vector<int> vi;"
+.BR "    vector<int>::iterator vitr;"
+.RB ""
+.RB "    // Not known until the time of template instantiation: dependent"
+.BR "    T t;"
+.BR "    vector<T> vt;"
+.BR "    vector<T>::iterator viter;"
+.BR "    typedef T another_name_for_T;" " // typedef transfers the quality"
+.BR "};"
+.fi
+.in
+
+.SH --- COMMON TASKS
+.BR
+.SS "Struct comparison"
+.BR
+.in +4n
+.nf
+.BR "struct A x, y;"
+.BR ""
+.BR "inline bool operator==(const A& x, const A& y)"
+.BR "{"
+.BR "    return (memcmp(&x, &y, sizeof(struct A)) == 0);"
+.BR "}"
+.fi
+.in

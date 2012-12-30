@@ -1,0 +1,437 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH VIM_HACKS 7 2009-04-27 "Reference" "Alvaro Castro Castilla"
+
+
+.SH --- TIPS AND TRICKS
+.BR
+.SS ":w !sudo tee %"
+Save a file you edited in vim without the needed permissions
+
+
+.SH --- EXTERNAL PROGRAMS
+.BR
+.SS "Berkeley Par"
+Format text paragraphs.
+
+.in +4n
+.nf
+.RB "# No more than 78 characters on each line"
+.BR "par -w78"
+.RB "# ...Also justify"
+.BR "par -w78j"
+.RB "# Comment box"
+.BR "par 60r"
+.fi
+.in
+
+.SS "Tidy"
+Format XML/HTML files and make them W3C comliant.
+
+.in +4n
+.nf
+.RB "# For XML files"
+.BR "tidy --input-xml true --indent yes -q"
+.RB "# For HTML files"
+.BR "tidy --indent yes -q"
+.fi
+.in
+
+.SS "Indent"
+Format C code.
+
+.in +4n
+.nf
+.RB "# The Kernighan & Ritchie style"
+.BR "indent -kr"
+.RB "# Berkeley style"
+.BR "indent -orig"
+.fi
+.in
+
+
+.SH --- VIM SCRIPTING
+.BR
+.SS "Types"
+There are only 2 types: strings and numbers.
+
+Numbers can be represented in three ways. These representations can be mixed in operations.
+
+.in +4n
+.nf
+.RB "Decimal number:       1     2     10    100
+.RB "Hexadecimal number:   0x01  0x02  0x0A  0x64
+.RB "Octal:                01    02    012   0144
+.fi
+.in
+
+Strings can be represented in either single or double quotes. If you need to use the character you used to encapsulate the string, you need to escape it with a backslash. In a single quoted string everything is shown as it is represented in the literal string (it does not interpret them).
+
+.in +4n
+.nf
+.BR "echo ""Hello world"""
+.BR "echo 'Hello world'
+.BR "echo ""This \e"" needs to be escaped"""
+.BR "echo 'This "" does not need to be escaped'"
+.BR ""
+.RB """ This will print two lines:"
+.BR "echo ""Hello in\en two lines"""
+.RB """ This will print only one:"
+.BR "echo 'Hello in\en one line'"
+.BR ""
+.RB """ Special escaped characters"
+.RB ""
+.RB "\en     Newline, line break"
+.RB "\er     Carriage return"
+.RB "\et     Tab space"
+.RB "\e123   Octal number"
+.RB "\ex123  Hexadecimal number"
+.RB "\eu     Character encoded as up to 4 hex numbers (\eu01fc34)"
+.RB "\ef     Form feed"
+.RB "\ee     Esc"
+.RB "\eb     Backspace"
+.RB "\e\e     Backslash"
+.RB "\e<CR>  Vim-specific key acronyms"
+.fi
+.in
+
+.SS "Variables"
+There are 5 types of variables.
+
+.in +4n
+.nf
+.RB """ String:"
+.BR "let mystring = ""a text string""
+.BR ""
+.RB """ Number:"
+.BR "let mynum = 100"
+.BR ""
+.RB """ List:"
+.BR "let mylist = [1, 2, "three", 0x04, myvar]"
+.BR "let mylist2 = [[1,2,3],[""four"", ""five"", ""six""]]"
+.BR ""
+.RB """ Dictionary:"
+.BR "let mydict = {1: ""one"", 2: ""two"", 3: ""three""}"
+.BR "let mydict2 = {1: ""one"", ""tens"":{0: ""ten"", 1: ""eleven""}}"
+.BR ""
+.RB """ Funcref:"
+.BR "let myfuncref = function(""MyFunction"")"
+.BR "echo myfuncref()"
+.BR "call myfuncref(arg1, arg2, ...)"
+.BR
+.fi
+.in
+
+Automatic conversion
+
+.in +4n
+.nf
+.BR "let mystring = ""100"""
+.BR "let mynum = mystring-50
+.BR ""
+.RB "Input                -------->  Output"
+.BR ""
+.RB """hello"" . ""world""               ""hello world"""
+.RB """number"" . 123                  ""number 123"""
+.RB """123"" + 100                     223"
+.RB """123"" - 100 . ""points""          ""23 points"""
+.RB """123"" - 100 + ""points""          23"
+.fi
+.in
+
+The scopes
+
+.in +4n
+.nf
+.RB "v:     Vim predefined global scope (see functions)"
+.RB "g:     Global scope"
+.RB "b:     Buffer scope"
+.RB "t:     Tab scope"
+.RB "w:     Window scope (current viewport)"
+.RB "l:     Function scope (local to the function)"
+.RB "s:     Source file scope (local to a loaded script)"
+.RB "a:     Argument scope (refer to arguments in functions)"
+.BR ""
+.BR "let g:sum=0
+.BR "function SumNumbers(num1,num2)
+.BR "    let l:sum = a:num1 + a:num2"
+.BR "    let g:sum = l:sum"
+.BR "endfunction"
+.fi
+.in
+
+Lists
+
+.in +4n
+.nf
+.BR "let mylist = [1,2,""three"",0x04,myvar]
+.RB """ Access the third element"
+.BR "echo mylist[2]"
+.RB """ Acess multi-dimensional list"
+.BR "let mylist2 = [[1,2,3],[""four"",""five"",""six""]]
+.BR "echo mylist2[0][1]"
+.RB """ Access backwards (-0 doesn't exist)"
+.BR "echo mylist2[-1][-3]"
+.RB """ Accessing non-existing indexes gives an error. You can prevent it:"
+.BR "echo get(mylist, 2)"
+.RB """ Add another item"
+.BR "call add(mylist, 5)"
+.RB """ Concatenate lists"
+.BR "let mylist3 = mylist + mylist2"
+.BR "let mylist3 += [5,6,7,8]"
+.BR "call extend(mylist, [5,6,7,8])"
+.RB """ Remove item from the list"
+.BR "call remove(mylist, 3)"
+.fi
+.in
+
+Dictionaries
+
+.in +4n
+.nf
+.BR "let mydict = {'banana': 'yellow', 'apple': 'green'}
+.RB """ Access"
+.BR "echo mydict['apple']
+.BR "mydict.apple"
+.RB """ Modify"
+.BR "let mydict['apple'] = 'red'
+.fi
+.in
+
+.SS "Logical operators"
+These operators can be used on both string and numeric values. In the case of strings, it evaluates according to ASCII value.
+
+.in +4n
+.nf
+.BR "val1 == val2" "       val1 equals val2"
+.BR "val1 != val2" "       val1 is not equal to val2"
+.BR "val1 > val2" "        val1 is higher than val2"
+.BR "val1 < val2" "        val1 is lower than val2"
+.BR "val1 >= val2" "       val1 is higher than or equal to val2"
+.BR "val1 <= val2" "       val1 is lower than or equal to val2"
+.fi
+.in
+
+These operators are exclusively for strings. The strings can be "regular expression" so you can match str2 on str1.
+
+.in +4n
+.nf
+.BR "str1 =~ str2" "       str1 contains substring str2 or is equal to str2"
+.BR "str1 !~ str2" "       str1 does not contain and is not equal to str2"
+.fi
+.in
+
+.SS "Loops"
+"For" construction
+
+.in +4n
+.nf
+.BI "for " "var " "in " "range"
+.IB "    code-to-execute"
+.BI "endfor"
+.BR ""
+.BI "for " "var " "in " "list"
+.IB "    code-to-execute"
+.BI "endfor"
+.BR ""
+.BI "for " "keyvar " "in keys( " "list " ")"
+.IB "    code-to-execute list" "[ keyvar ]"
+.BI "endfor"
+.fi
+.in
+
+"While" construction
+
+.in +4n
+.nf
+.BI "while " "condition"
+.IB "    code-to-execute"
+.BI "endwhile"
+.BR ""
+.RB """ break will interrupt execution of the loop. Flow jumps after endwhile."
+.BI "while " "condition"
+.BI "    break"
+.BI "endwhile"
+.RB """ <---- Flow jumps here"
+.BR ""
+.RB """ continue will interrupt execution. Flow jumps to the while statement."
+.RB """ <---- Flow jumps here"
+.BI "while " "condition"
+.BI "    continue"
+.BI "endwhile"
+.fi
+.in
+
+.SS "Conditions"
+"If" construction
+
+.in +4n
+.nf
+.BI "if " "condition"
+.IB "    code-to-execute"
+.BI "endif"
+.fi
+.in
+
+"If-else" construction
+
+.in +4n
+.nf
+.BI "if " "condition"
+.IB "    code-to-execute-if-condition-is-true"
+.BI "else"
+.IB "    code-to-execute-if-condition-is-false"
+.BI "endif"
+.fi
+.in
+
+"If-elseif" cosntruction
+
+.in +4n
+.nf
+.BI "if " "condition-1"
+.IB "    code-to-execute-if-condition-1-is-true"
+.BI "elseif " "condition-2"
+.IB "    code-to-execute-if-condition-2-is-true"
+.BI "endif"
+.fi
+.in
+
+.SS "Functions"
+Basics
+
+.in +4n
+.nf
+.RB """ It can have as many as 20 arguments. The ! symbol will redefine any
+.RB """ function with the same name"
+.BI "function! " "Name(arg1, arg2, ...argN) keyword"
+.RB "    code-to-execute"
+.BI "    return " "value-or-variable"
+.BR "endfunction"
+.BR ""
+.RB """ Remove a function definition"
+.BI "delfunction " "Name"
+.fi
+.in
+
+Function for a range
+
+.in +4n
+.nf
+.RB """ Indicate that this is a range function. That will call the function"
+.RB """ only once for a range of lines, instead of once for each one of them."
+.BI "function! numberList() range"
+.IB "    code-to-execute-only-once"
+.BI "endfunction"
+.fi
+.in
+
+Function on dictionary
+
+.in +4n
+.nf
+.BR "let mynumbers = {0:'zero',1:'one'}"
+.RB """ Indicate that this is a dictionary function. This will create the"
+.RB """ variable ""self"" refering to the dictionary to which is bound."
+.RB """ v:val is the value from ""map"""
+.BR "function mynumbers.convert(numb) dict"
+.BR "    return join(map(split(a:numb,'\ezs'),'get(self, v:val, ""unknown"")'))"
+.BR "endfunction"
+.BR ""
+.BR "echo mynumbers.convert(""010101"")"
+.BR ""
+.fi
+.fi
+
+Variable argument list
+
+.in +4n
+.nf
+.BR "function! foo(arg1, arg2, ...)"
+.BR "    let sum = a:arg1 + a:arg2"
+.BR "    let argnum = 1"
+.RB """ The special variable a:0 contains the number of arguments"
+.BR "    while argnum <= a:0"
+.RB """ To look up the argument in the list of optional arguments"
+.RB """ we use a:{argnum}. Those are the arguments after arg2"
+.BR "        let sum += a:{argnum}"
+.BR "        let argnum += 1"
+.BR "    endwhile"
+.RB """ Vim has another special variable called a:000 which acts as a list."
+.BR "    for arg in a:000"
+.BR "        echo arg"
+.BR "    endfor"
+.BR "    return sum"
+.BR "endfunction"
+.fi
+.in
+
+Predefined functions
+
+.in +4n
+.nf
+.BR ":help 'function-list'
+.fi
+.in
+
+.SS "Example script structure"
+This example follows the recommended structure for script development.
+
+.in +4n
+.nf
+.RB """ myscript.vim – Example script to show how a script is structured."
+.RB """ Version : 1.0"
+.RB """ Last modified : 28/04/2009"
+.RB """ License : This script is released under the Vim License."
+.BR ""
+.RB """ check if script is already loaded"
+.BR "if exists(""loaded_myscript"")"
+.BR "    finish ""stop loading the script"""
+.BR "endif"
+.BR "let loaded_myscript=1"
+.BR ""
+.BR "let s:global_cpo = &cpo  " """ store compatible-mode in local variable"
+.BR "set cpo&vim              " """ go into nocompatible-mode"
+.BR ""
+.RB """ ######## CONFIGURATION ########"
+.RB """ variable myscript_path"
+.BR "if !exists(""myscript_path"")"
+.BR "    let s:vimhomepath = split(&runtimepath,',')"
+.BR "    let s:myscript_path = s:vimhomepath[0].""/plugin/myscript.vim"""
+.BR "else"
+.BR "    let s:myscript_path = myscript_path"
+.BR "    unlet myscript_path"
+.BR "endif"
+.BR ""
+.RB """ variable myscript_indent"
+.BR "if !exists(""myscript_indent"")"
+.BR "    let s:myscript_indent = 4"
+.BR "else"
+.BR "    let s:myscript_indent = myscript_indent"
+.BR "    unlet myscript_indent"
+.BR "endif"
+.BR ""
+.RB """ ######## FUNCTIONS #########"
+.RB """ this is our local function with a mapping"
+.BR "function s:MyfunctionA()"
+.BR "    echo ""This is the script-scope function MyfunctionA speaking"""
+.BR "endfunction"
+.BR ""
+.RB """ this is a global function which can be called by anyone"
+.BR "function MyglobalfunctionB()"
+.BR "    echo ""Hello from the global-scope function myglobalfunctionB"""
+.BR "endfunction"
+.BR ""
+.RB """ this is another global function which can be called by anyone"
+.BR "function MyglobalfunctionC()"
+.BR "    echo ""Hello from MyglobalfuncionC() now calling locally:"""
+.BR "    call <SID>MyfunctionA()"
+.BR "endfunction"
+.BR ""
+.RB """ return to the users own compatible-mode setting"
+.BR ":let &cpo = s:global_cpo"
+.fi
+.in

@@ -1,0 +1,1127 @@
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH C/C++_RELATIONSHIP 7 2009-04-23 "Reference" "Alvaro Castro Castilla"
+
+.SH C / C++: DIFFERENCES AND GOTCHAS
+There are a few gotchas for C++ programmers trying to write C code, and C programmers trying to compile with a C++ compiler.
+
+
+.SH --- BASIC GOTCHAS FOR A C PROGRAMMER USING C++
+.BR
+.SS "Implicit cast from void*"
+You cannot implicitly assign from a void* to any other type:
+
+.in +4n
+.nf
+.BR "int *x = malloc(sizeof(int) * 10);" "  /* C++ won't compile */"
+.BR "int *x = (int *) malloc(sizeof(int) * 10);" "  /* Portable */"
+.fi
+.in
+
+.SS "Freeing arrays: new[] and delete[]"
+In C, there's only one major memory allocation function: malloc(). You use it to allocate both single elements and arrays; then release the memory using free():
+
+.in +4n
+.nf
+.BR "int *x = malloc( sizeof(int) );"
+.BR "int *x_array = malloc( sizeof(int) * 10 );"
+.BR ""
+.BR "free( x );"
+.BR "free( x_array );"
+.fi
+.in
+
+In C++, however, memory allocation for arrays is somewhat different; you use the new[] operator, and you must match calls to new[] with calls to delete[] (rather than to delete):
+
+.in +4n
+.nf
+.BR "int *x = new int;"
+.BR "int *x_array = new int[10];"
+
+.BR "delete x;"
+.BR "delete[] x;"
+.fi
+.in
+
+.SS "Declare functions before use"
+Although most good C code will follow this convention, in C++ it is strictly enforced that all functions must be declared before they are used. This code is valid C, but it is not valid C++:
+
+.in +4n
+.nf
+.BR "#include <stdio.h>"
+.BR "int main()"
+.BR "{"
+.BR "    function();" "  /* This will compile in C, but not in C++ */"
+.BR "    return 0;"
+.BR "}"
+.BR ""
+.BR "int function()"
+.BR "{"
+.BR "    printf( ""Hello world\en"" );"
+.BR "}"
+.fi
+.in
+
+.SH --- BASIC GOTCHAS FOR A C++ PROGRAMMER USING C
+.BR
+.SS "C++ has a larger library"
+C++ has a much larger library than C, and some things may be automatically linked in by C++ when they are not with C. For instance, you have to link the math library for function like sqrt()."
+
+.in +4n
+.nf
+.BR "$ g++ main.cpp"
+.BR "$ gcc main.c -lm"
+.fi
+.in
+
+.SS "No boolean type"
+C does not provide a boolean type. You can simulate it using enum:
+
+.in +4n
+.nf
+.BR "typedef enum {FALSE, TRUE} bool;"
+.fi
+.in
+
+Sometimes preprocessor macros are used:
+
+.in +4n
+.nf
+.BR "#define FALSE 0"
+.BR "#define TRUE 1" "  /* Defined as the integer 1 */
+.BR "#define TRUE -1" "  /* All bits set to 1 on two's complement architectures */"
+.BR "#define TRUE ~0" "  /* Defined as the bitwise complement of 0 */
+.fi
+.in
+
+In C99, there is a _Bool type. When any scalar value is converted to _Bool, the result is 0 if the value is 0, otherwise 1.
+
+.in +4n
+.nf
+.BR "#include <stdbool.h>
+.BR "int main()"
+.BR "{"
+.BR "    bool b = false;"
+.BR "    b = true;"
+.BR "}"
+.fi
+.in
+
+.SS "Structs and Enums"
+You have to include the struct keyword before the name of the struct type to declare a struct. A similar situation also holds for declaring enums.
+
+.in +4n
+.nf
+.BR "struct a_struct {"
+.BR "    int x;"
+.BR "};" "  /* This defines a typedef only in C++ */"
+.BR ""
+.BR "a_struct struct_instance;" "  /* Invalid C declaration! */"
+.BR "struct a_struct struct_instance;" "  /* Valid C and C++ declaration */"
+.fi
+.in
+
+Most C programmers get around this issue by ussing typedefs:
+
+.in +4n
+.nf
+.BR "typedef struct struct_name {" "  /* struct_name can be ommited  */"
+.BR "    char x;"
+.BR "} name_typedef;" "  /* This defines a typedef for both C and C++ */"
+.BR ""
+.BR "name_typedef struct_name_t_instance;" "  /* Valid C and C++ declaration */"
+.fi
+.in
+
+However, you must still use the "struct struct_name" syntax to declare a pointer inside the struct of the same type:
+
+.in +4n
+.nf
+.BR "typedef struct struct_name {" "  /* struct_name can be ommited  */"
+.BR "    struct struct_name* instance;" "  /* CHECK C++!!  Valid C and C++ declaration */"
+.BR "    struct_name* instance;" "  /* CHECK C++!!  Invalid C declaration! */"
+.BR "    name_typedef* instance;" "  /* Invalid C and C++ declaration! */"
+.BR "} name_typedef;"
+.BR ""
+.BR "struct struct_name2 {"
+.BR "    struct_name2* ptr;" "  /* This works in C++ */"
+.BR "};"
+.BR ""
+.BR "typedef struct struct_name name_typedef;
+.BR "struct struct_name {"
+.BR "    name_typedef *next;" "  /* This works in C */"
+.BR "};"
+.fi
+.in
+
+And they shouldn't be confused with the next construct. This declares a variable of type struct, allocating memory:
+
+.in +4n
+.nf
+.BR "struct {"
+.BR "    int data;"
+.BR "} var;" "  /* Variable var is created */"
+.fi
+.in
+
+
+.SS "Main return value"
+In C++, you are free to leave off the statement 'return 0;' at the end of main; it will be provided automatically:
+
+.in +4n
+.nf
+.BR "int main()"
+.BR "{"
+.BR "    printf( ""Hello, World\en"" );"
+.BR "    return 0;" "  /* Unnecesary in C++ */"
+.BR "}"
+.fi
+.in
+
+.SH --- INTERMIXING C AND C++
+.BR
+.SS "Using compatible compilers"
+The first requirement for mixing code is that the C and C++ compilers you are using must be compatible. They must, for example, define basic types such as int, float or pointer in the same way. The C runtime library used by your C compiler must also be compatible with the C++ compiler. C++ includes the standard C runtime library as a subset, with a few differences. If the C++ compiler provides its own versions of of the C headers, the versions of those headers used by the C compiler must be compatible. The Operating System usually specifies the Application Binary Interface (ABI) of C programs, which includes information about basic types and how functions are called.
+
+Even if your program is primarily C code but makes use of C++ libraries, you need to link C++ runtime support libraries provided with the C++ compiler into your program. The easiest and best way to do that is to use the C++ compiler driver to do the linking. The necessary C++ runtime libraries like libCrun and libCstd are linked automatically. If you can't use the C++ compiler for some reason, you can use the -dryrun option of the CC command to get the list of commands the compiler issues, and capture them into a shell script.
+
+.SS "C and C++ linkage"
+The object files their respective compilers produce can have important differences that manifest themselves when intermixing C and C++ code. Notably:
+
+.in +4n
+* C compilers do not name mangle symbols in the way that C++ compilers do.
+
+* Depending on the compiler and architecture, it also may be the case that calling conventions differ between the two languages.
+.in
+
+For these reasons, for C++ code to call a C function foo(), the C++ code must prototype foo() with extern "C":
+
+.in +4n
+.nf
+.BR "#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+.BR "extern ""C"" {"
+.BR "#endif"
+.BR ""
+.BR "void foo();" "  /* These functions get C linkage */"
+.BR ""
+.BR "#ifdef __cplusplus" "  /* If this is a C++ compiler, end C linkage */"
+.BR "}"
+.BR "#endif"
+.fi
+.in
+
+You can declare at most one function of an overloaded set as extern "C" because only one C function can have a given name. Linkage types can be mixed this way:
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR ""
+.BR "    void f();" "                   /* C linkage */"
+.BR "    extern ""C++"" {"
+.BR "        void g();" "               /* C++ linkage */"
+.BR "        extern ""C"" void h();" "    /* C linkage */"
+.BR "        void g2();" "              /* C++ linkage */"
+.BR "    }"
+.BR "    extern ""C++"" void k();" "      /* C++ linkage */"
+.BR "    void m();" "                   /* C linkage */"
+.BR ""
+.BR "}"
+.fi
+.in
+
+If you want to use a C library with its own defining header that was intended for C compilers, you can include the header in extern "C" brackets:
+
+.in +4n
+.nf
+.BR "extern ""C"""
+.BR "{"
+.BR "    #include ""header.h"""
+.BR "}"
+.fi
+.in
+
+.SS "Pointers to functions"
+
+Differences between C and C++ linkage and calling conventions can also have subtle implications for code that uses function pointers. Some compilers will produce non-working code if a function pointer declared extern "C" points to a C++ function that is not declared extern "C":
+
+.in +4n
+.nf
+.BR "void my_function();"
+.BR "extern ""C"" void foo(void (*fn_ptr)(void));"
+.BR ""
+.BR "void bar()"
+.BR "{"
+.RB "    /* foo() is a C function that takes a pointer"
+.RB "     * to my_function(), a C++ function"
+.RB "     */"
+.BR "    foo(my_function);"
+.BR "}"
+.fi
+.in
+
+Pointers to functions have one other subtlety that occasionally traps programmers. A linkage specification applies to all the parameter types and to the return type of a function. If you use the elaborated declaration of a pointer-to-function in a function parameter, a linkage specification on the function applies to the pointer-to-function as well. If you declare a pointer-to-function using a typedef, the linkage specification of that typedef is not affected by using it in a function declaration. For example, consider this code:
+
+.in +4n
+.nf
+.BR "typedef int (*pfn)(int);"
+.BR "extern ""C"" void foo(pfn p) { ... }" "  /* Definition */"
+.BR "extern ""C"" void foo( int (*)(int) );" "  /* Declaration */"
+.fi
+.in
+
+Although you intended for the declaration of foo and its definition to match, they do not. The definition of foo takes a pointer to a C++ function, but the declaration of foo takes a pointer to a C function. The code declares a pair of overloaded functions. However, this can be used to make the combination of function pointers and extern "C" functions work correctly in C++:
+
+.in +4n
+.nf
+.BR "extern ""C"""
+.BR "{"
+.BR "    typedef int  (*Pcf)(int);" "  /* C function pointer */"
+.BR "}"
+.BR ""
+.BR "void bar(int a)"
+.BR "{"
+.BR "    int (*pf)(int i);" "  /* C++ function pointer */"
+.BR "    pf = &mish;" "  /* Ok: C++ function address */"
+.BR "    (*pf)(a);"
+.BR ""
+.BR "    Pcf pc;" "  /* C function pointer */"
+.BR "    pc = &mash;" "  /* Ok: C function address */"
+.BR "    (*pc)(a);"
+.BR "} "
+.fi
+.in
+
+.SS "Working with C++ Exceptions"
+The best advice is not to use long_jmp in programs that contain C++ code. The C++ exception mechanism and C++ rules about destroying objects that go out of scope are likely to be violated by a long_jmp, with unpredictable results. Some compilers integrate exceptions and long_jmp, allowing them to work together, but you should not depend on such behavior.
+
+.SS "Accessing C++ Classes From C"
+Suppose you have a C++ class such as the following:
+
+.in +4n
+.nf
+.BR "class M {"
+.BR "public:"
+.BR "    virtual int foo(int);"
+.BR "private:""
+.BR "    int i, j;"
+.BR "};"
+.fi
+.in
+
+You cannot declare class M in your C code. The best you can do is to pass around pointers to class M objects, similar to the way you deal with FILE objects in C Standard I/O. You can write extern "C" functions in C++ that access class M objects and call them from C code. Here is a C++ function designed to call the member function foo:
+
+.in +4n
+.nf
+.BR "extern ""C"" int call_M_foo(M* m, int i) { return m->foo(i); }"
+.fi
+.in
+
+Here is an example of C code that uses class M:
+
+.in +4n
+.nf
+.BR "struct M;" "  /* You can supply only an incomplete declaration */"
+.BR "int call_M_foo(struct M*, int);" "  /* Declare the wrapper function */"
+.BR "int f(struct M* p, int j)" "  /* Now you can call M::foo */"
+.BR "{"
+.BR "    return call_M_foo(p, j);"
+.BR "}"
+.fi
+.in
+
+.SS "Adding C++ features to C structs"
+Suppose that instead of using C-style access you might want to add member functions, maybe virtual functions, possibly derive from the class, and so on. Consider the uses of the C struct buf in the following example:
+
+.in +4n
+.nf
+.BR "struct buf {"
+.BR "    char* data;"
+.BR "    unsigned count;"
+.BR "};"
+.BR "void buf_clear(struct buf*);"
+.fi
+.in
+
+You want to turn this struct into a C++ class and make it easier to use with the following changes:
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR "  #include ""buf.h"""
+.BR "}"
+.BR "class mybuf {"
+.BR "public:"
+.BR "    mybuf() : data(0), count(0) { }"
+.BR "    void clear() { buf_clear((buf*)this); }"
+.BR "private:"
+.BR "    char* data;"
+.BR "    unsigned count;"
+.BR "};"
+.fi
+.in
+
+Does the this pointer point to the data member, as a pointer to buf does? What if you add virtual functions to mybuf? The C++ standard makes no promises about the compatibility of buf and class mybuf. This code, without virtual functions, might work, but you can't count on it. If you add virtual functions, the code will fail using compilers that add extra data (such as pointers to virtual tables) at the beginning of a class. 
+
+The portable solution is to leave struct buf strictly alone, even though you would like to protect the data members and provide access only through member functions. You can derive a C++ class mybuf from the C struct buf, and pass pointers to the buf base class to the mybuf functions. If a pointer to mybuf doesn't point to the beginning of the buf data, the C++ compiler will adjust it automatically when converting a mybuf* to a buf*.
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR "  #include ""buf.h"""
+.BR "}"
+.BR "class mybuf : public buf { // a portable solution"
+.BR "public:"
+.BR "    mybuf() : data(0), count(0) { }"
+.BR "    void clear() { buf_clear(this); }"
+.BR "};"
+.fi
+.in
+
+.SH --- DETAILED: INCOMPATIBILITIES C89/ISO-C90 VS C++98 (NO LONGER IN C99)
+.BR
+.SS "Introduction"
+To get this behavior in gcc you have to use the following switches:
+
+.in +4n
+.nf
+.BR "gcc -std=c89 --pedantic-errors main.c"
+.fi
+.in
+
+.SS "Aggregate Initializers"
+C90 requires automatic and register variables of aggregate type (struct, array, or union) to have initializers containing only constant expressions. C++ allows non-constant expressions to be used in initializers for automatic and register variables. (It also allows arbitrary non-constant expressions to be used to initialize static and external variables).
+
+.in +4n
+.nf
+.BR "void foo(int i)"
+.BR "{
+.BR "    float   x = (float)i;" "        /* Valid C90, C99, and C++ */
+.BR "    int     m[3] = { 1, 2, 3 };" "  /* Valid C90, C99, and C++ */
+.BR "    int     g[2] = { 0, i };" "     /* Invalid C90 */
+.BR "}"
+.fi
+.in
+
+.SS "Comments"
+C++ recognizes //... comments as well as /*...*/ comments. The //... form usually produces a syntax error in C90, but there are rare cases that may compile erroneously without warning: 
+
+.in +4n
+.nf
+.BR "i = (x//*y*/z++, w);"
+.fi
+.in
+
+.SS "Conditional expression declarations"
+C++ allows local variable declarations within conditional expressions (which appear within for, if, while, and switch statements). The scope of the variables declared in this context extends to the end of the statement containing the conditional expression:
+
+.in +4n
+.nf
+.BR "for (int i = 0; i < SIZE; i++)"
+.BR "    a[i] = i + 1;"
+.fi
+.in
+
+.SS "Digraph punctuation tokens "
+C++ recognizes two-character punctuation tokens, called digraphs, which are not recognized by C90. The digraphs and their equivalent tokens are:
+
+.in +4n
+.nf
+.BR "<:        ["
+.BR ":>        ]"
+.BR "<%        {"
+.BR "%>        }"
+.BR "%:        #"
+.BR "%:%:     ##"
+.BR ""
+.BR "%:include <stdio.h>" "  /* Valid C99 and C++ code */
+.fi
+.in
+
+.SS "Implicit function declarations"
+C90 allows a function to be implicitly declared at the point of its first use (call), assigning it a return type of int  by default:
+
+.in +4n
+.nf
+.R "/* No previous declaration of bar() is in scope */"
+.BR "void foo(void)"
+.BR "{"
+.BR "    bar();" "  /* Implicit declaration: extern int bar(),"
+.RB "               valid C90, invalid C99 and C++ */"
+.fi
+.in
+
+.SS "Implicit variable declarations"
+C90 allows the declaration of a variable, function argument, or structure member to omit the type specifier, implicitly defaulting its type to int:
+
+.in +4n
+.nf
+.BR "static  sizes = 0;" "  /* Implicit int, invalid C99 and C++ */"
+.BR "static foo(register i)" "  /* Implicit ints, invalid C99 and C++ */"
+.BR "{"
+.BR "    auto  j = 3;" "  /* Implicit int, invalid C99 and C++ */"
+.BR "    return (i + j);"
+.BR "}"
+.fi
+.in
+
+.SS "Intermixed declarations and statements"
+C90 syntax specifies that all the declarations within a block must appear before the first statement in the block. C++ and C9 do not have this restriction.
+
+.in +4n
+.nf
+.BR "void foo(void)"
+.BR "{"
+.BR "    int i;"
+.BR "    for (i = 0; i < 10; i++)"
+.BR "        printf(""count: %i\en"", i);"
+.BR ""
+.BR "    char *s;" "  /* Invalid C90, valid C99 and C++ */"
+.BR "    *s = 'a';
+.BR "}"
+.fi
+.in
+
+.SH --- DETAILED: INCOMPATIBILITIES ISO-C99 VS C++98
+.BR
+.SS "Introduction"
+To get this behavior in gcc you have to use the following switches:
+
+.in +4n
+.nf
+.BR "gcc -std=c99 --pedantic-errors main.c"
+.fi
+.in
+
+.SS "Alternate punctuation token spellings"
+C++ provides the following keywords as synonyms for punctuation tokens.
+
+.in +4n
+.nf
+.BR "and        &&"
+.BR "and_eq     &="
+.BR "bitand      &"
+.BR "bitor       |"
+.BR "compl       ~"
+.BR "not         !"
+.BR "not_eq     !="
+.BR "or         ||"
+.BR "or_eq      |="
+.BR "xor         ^"
+.BR "xor_eq     ^="
+.fi
+.in
+
+C90 does not have these built-in keywords, but it does provide a standard <iso646.h> header file that contains definitions for the same words as macros, behaving almost like built-in keywords. However, C code that does not include the <iso646.h>  header is free to use these words as identifiers and macro names, which may cause incompatibilities when such code is compiled as C++. The recommended practice for code intended to be compiled as both C and C++ is to use these identifiers only for these special meanings, and only after including <iso646.h>.
+
+.in +4n
+.nf
+.BR "#ifndef __cplusplus"
+.BR "#include <iso646.h>"
+.BR "#endif"
+.BR ""
+.BR "int foo(float a, float b, float c)"
+.BR "{"
+.BR "    return (a > b  and  b <= c);"
+.BR "}"
+.fi
+.in
+
+.SS "Array parameter qualifiers"
+Contrary to C++, C99 provides new declaration syntax for function parameters of array types, allowing type qualifiers (the cv-qualifiers const and volatile, and restrict) to be included within the first set of brackets of an array declarator. The qualifier modifies the type of the array parameter itself. The following declarations are semantically identical:
+
+.in +4n
+.nf
+.BR "extern void foo(int str[const]);" "  /* const pointer to an object */
+.BR "extern void foo(int *const str);" "  /* const pointer to an object */
+.fi
+.in
+
+C99 also allows the static specifier to be placed within the brackets of an array declaration immediately preceding the expression specifying the size of the array. The presence of such a specifer indicates that the array is composed of at least the number of contiguous elements indicated by the size expression.
+
+.in +4n
+.nf
+.BR "void foo(char s[static 10])"
+.BR "{"
+.RB "    /* s[0] to s[9] exist and are contiguous */"
+.BR "}"
+.fi
+.in
+
+.SS "Boolean type"
+C99 supports the _Bool keyword, which declares a two-valued integer type (capable of representing the values true and false). It also provides a standard <stdbool.h> header that contains definitions for the following macros:
+
+.in +4n
+.nf
+.BR "bool         Same as _Bool"
+.BR "false        Equal to (_Bool)0
+.BR "true         Equal to (_Bool)1
+.fi
+.in
+
+.SS "Character literals"
+In C, character literals such as 'a' have type int, and thus sizeof('a') is equal to sizeof(int). In C++, character literals have type char, and thus sizeof('a') is equal to sizeof(char).
+
+.SS "clog identifier"
+C99 declares clog() in <math.h> as the complex natural logarithm function. C++ declares std::clog in <iostream>  as the name of the standard error logging output stream (analogous to the stderr stream). This name is placed into the global namespace if the <math.h>  header is included, and refers to the logarithm function. If <math.h> defines clog as a preprocessor macro name, it can cause problems with other C++ code:
+
+.in +4n
+.nf
+.BR "#include <iostream>"
+.BR "using std::clog;"
+.BR "#include <math.h>" "  /* C header: possible conflict */
+.BR ""
+.BR "void foo(void)"
+.BR "{"
+.BR "    clog << clog(2.718281828) << endl;" "  /* Possible conflict */"
+.BR "}"
+.BR ""
+.BR "#include <iostream>"
+.BR "#include <cmath>" "  /* C++ header: no conflict */
+.BR ""
+.BR "void foo(void)"
+.BR "{"
+.BR "    std::clog << std::clog(2.718281828) << endl;" "  /* No conflict:
+.RB "    * first one is a variable, second one is a function */
+.BR "}
+.fi
+.in
+
+.SS "Comma operator results"
+The comma operator in C always results in an r-value even if its right operand is an l-value, while in C++ the comma operator will result in an l-value if its right operand is an l-value.  This means that certain expressions are valid in C++ but not in C:
+
+.in +4n
+.nf
+.BR "int     i;"
+.BR "int     j;"
+.BR "
+.BR "(i, j) = 1;" "  /* Valid C++, invalid C */
+.fi
+.in
+
+.SS "Complex floating-point type"
+.RI "C99 provides built-in complex and imaginary floating point types, which are declared using the _Complex and _Imaginary keywords. Implicit widening conversions between the complex and imaginary types are provided. C99 also provides a standard <complex.h> header that contains definitions of complex floating point types, macros, and constants. In particular, this header defines macros for" " float" "," " double" " and" " long double":
+
+.in +4n
+.nf
+.BR "complex float" "  /* Float complex type */
+.BR "_Complex float" "  /* Same as above */
+.BR "imaginary double" "  /* Double imaginary type */
+.BR "_Imaginary long double" "  /* Long double imaginary type */
+.BR "I" "  /* i (the complex identity) */
+.fi
+.in
+
+C++ provides a template class named complex, declared in the <complex> standard header file. This type is incompatible with the C99 complex types.
+
+.in +4n
+.nf
+.BR "#include <complex>"
+.BR "complex<float> square(complex<float> a);"
+.fi
+.in
+
+It is possible to define typedefs that will work in both C99 and C++, albeit with some limitations: 
+
+.in +4n
+.nf
+.BR "#ifdef __cplusplus"
+.BR "#include <complex>"
+.BR "typedef complex<float> complex_float;"
+.BR "#else"
+.BR "#include <complex.h>"
+.BR "typedef complex float complex_float;"
+.BR "#endif "
+.fi
+.in
+
+.SS "Compound literals"
+C99 allows literals having types other than primitive types (e.g., user-defined structure or array types) to be specified in constant expressions; these are called compound literals. C++ does not support this feature, although provides a similar capability through the use of non-default class constructors, but which is not quite as flexible as the C feature.
+
+.in +4n
+.nf
+.BR "struct info {"
+.BR "    char name[8+1];"
+.BR "    int type;"
+.BR "};"
+.BR ""
+.BR "extern void add(struct info s);"
+.BR "extern void move(float coord[2]);"
+.BR ""
+.BR "void predef(void)"
+.BR "{"
+.BR "    add((struct info){ ""e"", 0 });" "  /* A struct literal */"
+.BR "    move((float[2]){ +0.5, -2.7 });" "  /* An array literal */"
+.BR "}"
+.fi
+.in
+
+.SS "const linkage"
+.RI "C99 specifies that a variable declared with a const qualifier is treated the same as any other variable, except being not modifiable. This implies that it has external linkage by default. C++ specifies that a const object with file scope has internal linkage by default. The recommended practice is therefore to define constants with an explicit" " static" " or" " extern" " specifier."
+
+.in +4n
+.nf
+.BR "const int i = 1;" "  /* C99 external linkage, C++ internal linkage */
+.fi
+.in
+
+.SS "Designated initializers"
+99 introduces the feature of designated initializers, which allows specific members of structures, unions, or arrays to be initialized explicitly by name or subscript. Unspecified members are default-initialized. C++ does not support this feature.
+
+.in +4n
+.nf
+.BR "struct info {"
+.BR "    char name[8+1];"
+.BR "    int sz;"
+.BR "};"
+.BR "struct info arr[] = { [0] = {.sz = 20, .name = ""abc""} }; "
+.fi
+.in
+
+.SS "Duplicate typedefs"
+C does not allow a given typedef to appear more than once in the same scope. C++ handles typedefs and type names differently than C, and allows redundant occurrences of a given typedef within the same scope. This means that typedefs that might be included more than once in a program should be guarded by preprocessing directives if such source code is meant to be compiled as both C and C++.
+
+.in +4n
+.nf
+.BR "typedef int MyInt;"
+.BR "typedef int MyInt;" "  /* Valid C++, invalid C */
+.fi
+.in
+
+.SS "Dynamic sizeof evaluation"
+.RI "Any expression that involves applying the" " sizeof" " operator to a VLA operand must be evaluated at runtime (any other use of" " sizeof" " can be evaluated at compile time)."
+
+.SS "Empty parameter lists"
+C distinguishes between a function declared with an empty parameter list and a function declared with a parameter list consisting of only void. C++, on the other hand, makes no distinction between the two declarations and considers them both to mean a function taking no arguments. For code that is intended to be compiled as either C or C++, the best solution to this problem is to always declare functions taking no parameters with an explicit void prototype.
+
+.in +4n
+.nf
+.BR "extern int foo();" "  /* In C it specifies a function taking a"
+.RB "                    * variable number of arguments."
+.RB "                    * In C++ it specifies a function taking"
+.RB "                    * no arguments */"
+.BR "extern int bar(void);" "  /* In C it specifies a function taking"
+.RB "                        * no arguments."
+.RB "                        * In C++ it also specifies a function"
+.RB "                        * taking no arguments */"
+.fi
+.in
+
+.SS "Empty preprocessor function macro arguments"
+C99 allows preprocessor function macros to be specified with empty (missing) arguments. C++ does not support empty preprocessor function macros arguments.
+
+.in +4n
+.nf
+.BR "#define ADD3(a,b,c)  (+ a + b + c + 0"
+.BR ""
+.BR "ADD3(1, 2, 3)   => (+ 1 + 2 + 3 + 0" "  /* C99 valid, C++ valid too */"
+.BR "ADD3(1, , 3)    => (+ 1 + + 3 + 0" "  /* C99 valid code, C++ invalid */"
+.BR "ADD3(,,)        => (+ + + + 0)" "  /* C99 valid code, C++ invalid */"
+.fi
+.in
+
+.SS "Enumeration constants"
+.RI "Enumeration constants in C are essentially just named constants of type" " signed int" ". C++ enumeration constants have the same type as their enumeration type, which means that they have the same size and alignment as their underlying integer type."
+
+.SS "Enumeration declarations with trailing comma"
+C99 allows a trailing comma to follow the last enumeration constant initializer within an enumeration type declaration. C++ does not allow this.
+
+.in +4n
+.nf
+.BR "enum Color { RED = 0, GREEN, BLUE, };" "  /* C99 valid code, C++ invalid */
+.fi
+.in
+
+.SS "Enumeration types"
+.RI "C specifies that each enumerated type is a unique type, distinct from all other enumerated types within the same program. The implementation is free to use a different underlying primitive integer type for each enumerated type. Such types may be different than the types used by a C++ compiler leading to incompatibilities when intermixing code. In C," " sizeof(enum A)" " and" " sizeof(enum B)" " are not necessarily the same. This means, given that RED is an enumeration constant of type" " enum Color" ", that" " sizeof(RED)" " and" " sizeof(enum Color)" " are not necessarily the same (since all enumeration constants are of type signed int).
+
+.in +4n
+.nf
+.BR "enum Color { RED, BLUE, GREEN };"
+.BR ""
+.BR "int c = RED;" "  /* Cast not needed */"
+.BR "enum Color  col = 1;" "  /* Cast not needed */"
+.fi
+.in
+
+.RI "However, a C++ enumeration constant has the same type and size as its enumeration type. C++ also specifies that all enumerated types are unique and distinct types, but it goes further than C to enforce this. In particular, a function name can be overloaded to take an argument of different enumerated types. Implicitly converted enumeration values are converted to their underlying integer type, which is not necessarily" " signed int" "."
+
+.in +4n
+.nf
+.BR "enum Color { ... };"
+.BR ""
+.BR "enum Color setColor(int h) {"
+.BR "    enum Color c;"
+.BR "    c = h;" "  /* Error, no implicit conversion */"
+.BR "    return c;"
+.BR "}"
+.BR ""
+.BR "int hue(enum Color c)"
+.BR "{"
+.BR "    return (c + 128);" "  /* Implicit conversion, but might"
+.RB "                        * not be signed int */"
+.BR "}"
+.fi
+.in
+
+.SS "Flexible array members (FAMs)"
+This is also known as the struct hack. This specifies a conforming way to declare a structure containing a set of fixed-sized members followed by a flexible array member  that can hold an unspecified number of elements. Such a structure is typically allocated by calling malloc(), passing it the number of bytes beyond the fixed portion of the structure to add to the allocation size. C++ does not support flexible array members.
+
+.in +4n
+.nf
+.BR "struct Hack {"
+.BR "    int count;" "  /* Fixed member(s) */"
+.BR "    int fam[];" "  /* Flexible array member */"
+.BR "};"
+.BR ""
+.BR "struct Hack * vmake(int sz)"
+.BR "{"
+.BR "    struct Hack *  p;"
+.BR "    p = malloc(sizeof(struct Hack) + sz*sizeof(int));"
+.BR "    p->count = sz;"
+.BR "    for (int i = 0; i < sz; i++)"
+.BR "        p->fam[i] = i;"
+.BR ""
+.BR "    return p;"
+.BR "}"
+.fi
+.in
+
+.SS "Function name mangling"
+A consequence of C++ function name mangling is that identifiers in C++ are not allowed to contain two or more consecutive underscores (e.g., the name foo__bar is invalid). Such names are reserved for the implementation. C does not reserve such names, so a C program is free to use such names in any manner.
+
+.SS "Hexadecimal floating-point literals"
+.RI "99 recognizes hexadecimal floating-point literals, having a" " 0x" " prefix and a" " p" " exponent specifier and additional format specifier for" " printf()" " and" " scanf()" ". C++ does not support it, but is likely to be provided as extensions."
+
+.in +4n
+.nf
+.BR "float  pi = 0x3.243F6A88p+03;"
+.BR "printf("%9.3a", f);"
+.BR "printf("%12.6lA", d);"
+.fi
+.in
+
+.SS "IEC 60559 arithmetic support"
+C99 allows an implementation to pre-define the __STD_IEC_559  and __STD_IEC_559_COMPLEX preprocessor macros, indicating that it conforms to certain required behavior of the IEC 60559 (a.k.a. IEEE 599) specification. C++ does not make any special provisions for implementations that explicitly support the IEC 60559 specification.
+
+.SS "Inline functions"
+Both C99 and C++ allow functions to be defined as inline, but there is a small difference in the semantics of the two languages. C++ requires all of the definitions for a given inline function to be composed of exactly the same token sequence, semantically equivalent but syntactically (token-wise) different.
+
+.in +4n
+.nf
+.BR "// --> one.c"
+.BR "inline int twice(int i)"
+.BR "{"
+.BR "    return i * i;"
+.BR "}"
+.BR ""
+.BR "// --> two.c"
+.BR "typedef int  integer;"
+.BR ""
+.BR "inline integer twice(integer a)" "  /* Another definition, illegal C++ */"
+.BR "{"
+.BR "    return (a * a);"
+.BR "}"
+.fi
+.in
+
+.SS "Integer types headers"
+C99 provides the header file <stdint.h>. This feature is likely to be provided as an extension by many C++ compilers, sometimes as <cstdint>.
+
+.SS "long long integer type"
+C99 provides signed long long  and unsigned long long  integer types to its repertoire of primitive types, which are binary integer types at least 64 bits wide. C99 also provides several new macros in <limits.h> for such types. These features are likely to be provided as extensions by many C++ compilers.
+
+.in +4n
+.nf
+.BR "long long int i = -9000000000000000000LL;"
+.BR "unsigned long long int u = 18000000000000000000LLU;"
+.BR "printf(""%lld"", i);"
+.fi
+.in
+
+.SS "Nested structure tags"
+The scope of the inner structure tag extends outside the scope of the outer structure in C, but does not do so in C++. This applies to any struct, union, and enumerated types.
+
+.in +4n
+.nf
+.BR "struct Outer"
+.BR "{"
+.BR "    struct Inner" "  /* Nested structure declaration */"
+.BR "    {"
+.BR "        int a;"
+.BR "        float f;"
+.BR "    } in;"
+.BR ""
+.BR "    enum E" "  /* Nested enum type declaration */"
+.BR "    {"
+.BR "        UKNOWN, OFF, ON"
+.BR "    } state;"
+.BR "};"
+.BR ""
+.BR "struct Inner si;" "  /* Visible in C, not in C++ */"
+.BR "enum E et;" "  /* Visible in C, not in C++ */"
+.BR "Outer::Inner si;" "  /* Explicit type name for C++ */"
+.BR "Outer::E et;" "  /* Explicit type name for C++ */"
+.fi
+.in
+
+.SS "Non-prototype function declarations"
+C supports non-prototype (K&R-style) function definitions. Like C90, C99 deems this as deprecated practice. C++ allows only prototyped function definitions.
+
+.in +4n
+.nf
+.BR "int foo(a, b)" "  /* Deprecated C syntax, invalid C++ syntax */"
+.BR "    int  a;"
+.BR "    int  b;"
+.BR "{"
+.BR "    return (a + b);"
+.BR "}"
+.fi
+.in
+
+.SS "Old-style casts"
+One possible work-around is to use macros in C that simulate the C++ typecast operators:
+
+.in +4n
+.nf
+.BR "#ifdef __cplusplus"
+.BR " #define const_cast(t,e)        const_cast<t>(e)"
+.BR " #define dynamic_cast(t,e)      dynamic_cast<t>(e)"
+.BR " #define reinterpret_cast(t,e)  reinterpret_cast<t>(e)"
+.BR " #define static_cast(t,e)       static_cast<t>(e)"
+.BR "#else"
+.BR " #define const_cast(t,e)        ((t)(e))"
+.BR " #define dynamic_cast(t,e)      _Do_not_use_dynamic_cast"
+.BR " #define reinterpret_cast(t,e)  ((t)(e))"
+.BR " #define static_cast(t,e)       ((t)(e))"
+.BR "#endif"
+.BR ""
+.BR "const char *  s = const_cast(const char *, p);"
+.BR ""
+.BR "f = float(i);" "  /* Functional cast: valid C++ , invalid C */"
+.fi
+.in
+
+.SS "One definition rule"
+
+C allows tentative definitions for variables, C++ doesn't. C allows definitions of the same function or object in different source files to be composed of different token sequences, provided that they are semantically identical. The C++ rules are more strict, requiring the multiple definitions to be composed of identical token sequences.
+
+.in +4n
+.nf
+.BR "int  i;" "  /* Tentative definition */"
+.BR "int  i = 1;" "  /* Explicit definition, illegal C++ */"
+.BR ""
+.BR "// --> one.c"
+.BR ""
+.BR "struct s1 {"
+.BR "    int     a;"
+.BR "};"
+.BR ""
+.BR "struct s2 {"
+.BR "    int a;"
+.BR "};"
+.BR ""
+.BR "int foo(int input)"
+.BR "{"
+.BR "    return (input*2);"
+.BR "}"
+.BR ""
+.BR "// --> two.c"
+.BR ""
+.BR "struct s1 {"
+.BR "    float   x;" "  /* Conflicting declaration in C++ */"
+.BR "};"
+.BR ""
+.BR "typedef int IType;"
+.BR "struct s2 {"
+.BR "    IType  a;" "  /* Equivalent declaration, but different token"
+.RB "                 * sequence legal C, illegal C++ code */"
+.BR "};"
+.BR ""
+.BR "IType foo(IType input)" "  /* Equivalent definition, but a different"
+.BR "{" "                        * token sequence. Legal C, illegal C++ code */"
+.BR "    return (input*2);"
+.BR "}"
+.fi
+.in
+
+.SS "_Pragma keyword"
+C99 provides the _Pragma keyword, which operates in a similar fashion to the #pragma preprocessor directive. This feature is likely to be provided as an extension by many C++ compilers.
+
+.in +4n
+.nf
+.BR "#pragma FLT_ROUND_INF" "  /* Preprocessor pragma */
+.BR "_Pragma(FLT_ROUND_INF)" "  /* Pragma statement */
+.fi
+.in
+
+.SS "Predefined identifiers"
+C99 provides a predefined identifier, __func__, which acts like a string literal containing the name of the enclosing function. C++ compilers provide this as an extension.
+
+.in +4n
+.nf
+.BR "int incr(int a)"
+.BR "{"
+.BR "    fprintf(dbgf, "%s(%d)\n", __func__, a);"
+.BR "    return ++a;"
+.BR "}"
+.fi
+.in
+
+.SS "Reserved keywords"
+C99 has a few reserved keywords that are not recognized by C++:
+
+.in +4n
+.nf
+.BR "restrict"
+.BR "_Bool"
+.BR "_Complex"
+.BR "_Imaginary"
+.BR "_Pragma"
+.fi
+.in
+
+Likewise, C++ has a few keywords that are not recognized by C99:
+
+.in +4n
+.nf
+.BR "bool              mutable            this"
+.BR "catch             namespace          throw"
+.BR "class             new                true"
+.BR "const_cast        operator           try"
+.BR "delete            private            typeid"
+.BR "dynamic_cast      protected          typename"
+.BR "explicit          public             using"
+.BR "export            reinterpret_cast   virtual"
+.BR "false             static_cast        wchar_t"
+.BR "friend            template"
+.fi
+.in
+
+.SS "Returning void"
+C++ allows functions of return type void to explicitly return expressions of type void. C does not allow void functions to return any kind of expression.
+
+.in +4n
+.nf
+.BR "template <typename T>"
+.BR "T bar(someType expr)"
+.BR "{"
+.BR "    return (T)expr;" "  /* Valid C++ even if T is void */"
+.BR "}"
+.fi
+.in
+
+.SS "Static linkage"
+Both C and C++ allow objects and functions to have "static file linkage", also known as "internal linkage". C++, however, deems this as deprecated practice, preferring the use of unnamed namespaces instead. C++ objects and functions declared within unnamed namespaces have external linkage unless they are explicitly declared static. C++ deems the use of static specifiers on objects or function declarations within namespace scope as deprecated.
+
+.in +4n
+.nf
+.BR "static int bufsize = 1024;"
+.BR "static long square(long x)"
+.BR "{"
+.BR "    return (x * x);"
+.BR "}" "  /* C valid, C++ valid but deprecated */"
+.BR ""
+.BR "namespace"
+.BR "{"
+.BR "    static int  bufsize = 1024;"
+.BR "    static long square(long x)"
+.BR "    {"
+.BR "        return (x * x);"
+.BR "    }"
+.BR "}" "  /* Preferred C++ way */"
+.fi
+.in
+
+.SS "String initializers"
+C allows character arrays to be initialized with string constants. It also allows a string constant initializer to contain exactly one more character than the array it initializes. C++ always includes the terminating null character in the initialization.
+
+.in +4n
+.nf
+.BR "char name[5] = ""Harry"";" "  /* Array of 5 char, no null char: invalid C++ */ 
+.fi
+.in
+
+.SS "String literals are const"
+In C, string literals have type char[n]. In C++, string literals have type const char[n]. In both cases they are not modifiable. When a string literal is used in an expression (or passed to a function), both C and C++ implicit convert it into a pointer of type char *. The implicit conversion has been deprecated in C++.
+
+.SS "Structures declared in function prototypes"
+C allows struct, union, and enum types to be declared within function prototype scope. C++ does not allow either of these, since the scope of the structure declared in this fashion does not extend outside the function declaration or definition.
+
+.in +4n
+.nf
+.BR "extern void  foo(const struct info { int typ; int sz; } *s);"
+.fi
+.in
+
+.SS "Variable-argument function declarators"
+C++ allows variable function argument lists, but provides two syntactical forms for this feature.
+
+.in +4n
+.nf
+.BR "int foo(int a, int b, ...);" "  /* Valid C++ and C */"
+.BR "int bar(int a, int b ...);" "  /* Valid C++, invalid C */"
+.fi
+.in
+
+.SS "Variable-argument preprocessor function macros"
+C99 supports preprocessor function macros that may take a variable number of arguments, using the __VA_ARGS__  reserved identifier in their replacement text. C++ does not provide this feature.
+
+.in +4n
+.nf
+.BR "#define DEBUGF(f,...) \e"
+.BR "    (fprintf(dbgf, "%s(): ", f), fprintf(dbgf, __VA_ARGS__))"
+.BR ""
+.BR "#define DEBUGL(...) \e"
+.BR "    fprintf(dbgf, __VA_ARGS__)"
+.BR ""
+.BR "int incr(int *a)"
+.BR "{"
+.BR "    DEBUGF("incr", "before: a=%d\n", *a);"
+.BR "    (*a)++;"
+.BR "    DEBUGL("after: a=%d\n", *a);"
+.BR "    return (*a);"
+.BR "}"
+.fi
+.in
+
+.SS "Variable-length arrays (VLAs)"
+C99 supports variable-length arrays, which are arrays of automatic storage whose size is determined dynamically at program execution time. C99 also provides new declaration syntax for function parameters using a '*'. This can only appear in function declarations (with prototypes) and not in function definitions. C++ doesn't support VLAs.
+
+.in +4n
+.nf
+.BR "extern int foo_a(int n, float a[*]);" "  /* Declaration: use of ""*"" */"
+.BR ""
+.BR "int foo_b(int n, float a[size])" "  /* ""a"" is a VLA */"
+.BR "{"
+.BR "    float array[n];"
+.BR "    ..."
+.BR "    return sizeof(array);" "  /* The size is evaluated at run-time */"
+.BR "}"
+.fi
+.in
+
+.SS "Void pointer assignments"
+C allows a pointer to void (void *) value to be assigned to an object of any other pointer type without requiring a cast. C++ does not allow assigning a pointer to void directly to an object of any other pointer type without an explicit cast. Both languages allow values of any pointer type to be assigned to objects of type pointer to void without requiring an explicit cast.
+
+.in +4n
+.nf
+.BR "struct object * p;"
+.BR "p = malloc(sizeof(struct object));" "  /* Valid C, invalid C++
+.RB "                                     * without an explicit cast */"
+.BR ""
+.BR "void * vp;"
+.BR "Type * tp;"
+.BR "vp = tp;" "  /* Valid C and C++ */"
+.fi
+.in
+
+.SS "Wide character type"
+C provides a wide character type, wchar_t, that is capable of holding a single wide character from an extended character set. This type is defined in the standard header files <stddef.h>, <stdlib.h>, and <wchar.h>. C++ also provides a wchar_t type, but it is a reserved keyword just like int. The recommended practice is therefore to use the wchar_t type only for its special meaning, and only after including <stddef.h>, <stdlib.h>, or <wchar.h>.
+
+.in +4n
+.nf
+
+.fi
+.in

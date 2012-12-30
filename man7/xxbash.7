@@ -1,0 +1,950 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH BASH_NOTES 7 2009-04-29 "Reference" "Alvaro Castro Castilla"
+
+.SH --- SHELL OPERATION
+.BR
+.SS "Getting help"
+.in +4n
+.nf
+.RB "$ " "help -s printf" "  # Shows a summary o the built-in command"
+.RB "$ " "man -k alias" "  # Searches the man pages for word ""alias"""
+.RB "$ " "makewhatis" "  # Updates ""apropos"" (previous command) database"
+.fi
+.in
+
+.SS "Command-line editing"
+
+.in +4n
+.nf
+.RB "$ " "shopt -o emacs" "  # Emacs mode"
+.RB "$ " "shopt -o vi" "  # Vim mode"
+.RB "$ " "help bind" "  # Help on customizing keys for readline"
+.RB "$ " "man bash" "  # /shopt options
+.RB ""
+.RB "/etc/profile      Common setup to all users"
+.RB "~/.bash_profile   User private profile"
+.RB "~/.bash_login     Idem (executes the first one found)"
+.RB "~/.profile        Idem (executes the first one found)"
+.RB "~/.bash_logout    Runs on exit"
+.RB "~/.bashrc         (Resources) interactive shells that are not login sh"
+.RB ""
+.RB "$ " "bash --login" "  # Run bash reading changes in profile files"
+.RB "$ " "bash --no-profile" "  # Do not run profile files"
+.RB "$ " "bash --norc" "  # Do not run any resource file"
+.RB ""
+.RB "CTRL-x CTRL-e    Open editor for introducing command"
+.RB "CTRL-b           Moves back one character to the left"
+.RB "CTLR-f           Moves forward one character to the right"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /READLINE"
+.fi
+.in
+
+.SS "Completions"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /compgen"
+.RB "$ " "man bash" "  # /complete"
+.fi
+.in
+
+.SS "Command history"
+
+.in +4n
+.nf
+.RB "$ " "date; sleep 5; !#"
+.RB "date; sleep 5; date; sleep 5;"
+.RB ""
+.RB "$ " "!1234" "  # A particular command line"
+.RB "$ " "!-n" "  # The current line minus ""n"""
+.RB "$ " "!!:$" "  # Previous last word"
+.RB "$ " "!!:*" "  # Previous first to last word"
+.RB "$ " "!!:r" "  # Previous last word without extension"
+.RB "$ " "!#:r" "  # Current last word without extension"
+.RB ""
+.RB "$ " "fc" "  # Open editor and fix previous command"
+.RB ""
+.RB "$ " "history -a" "  # Appends to history file"
+.RB "$ " "history -c" "  # Clears history"
+.RB ""
+.RB ""
+.RB "$ " "man history"
+.RB "$ " "man bash" "  # /HISTORY"
+.RB "$ " "man bash" "  # /HISTORY EXPANSION"
+.fi
+.in
+
+.SS "Shell aliases"
+
+.in +4n
+.nf
+.RB "$ " "alias ls ='ls -qF'" "  # It excludes any previous alias of ls"
+.RB "$ " "man bash" "  # /ALIASES"
+.fi
+.in
+
+.SS "The hash table"
+
+.in +4n
+.nf
+.RB "$ " "hash"
+.RB "$ " "man bash" "  # /hash"
+.fi
+.in
+
+.SS "The prompt"
+
+.in +4n
+.nf
+.RB "$ " "declare -x PS1=""Bash $ """ "  # Change primary prompt"
+.RB "$ " "declare -x PS2=""Bash $ """ "  # Change secondary prompt (long lines)"
+.RB "$ " "man bash" "  # /PROMPTING"
+.fi
+.in
+
+.SS "Fixing the display"
+
+.in +4n
+.nf
+.RB "$ " "reset"
+.RB "$ " "stty sane" "  # If reset fails"
+.fi
+.in
+
+.SS "Console"
+
+.in +4n
+.nf
+.RB "$ " "tty" "  # Check console/virtual terminal id"
+.RB "$ " "fgconsole" "  # Check current console"
+.fi
+.in
+
+.SH --- SCRIPTING BASICS
+.BR
+.SS "Script structure"
+
+.in +4n
+.nf
+.RB "#!/bin/bash"
+.RB "#"
+.RB "# Flush disks"
+.RB "#"
+.RB "# Author"
+.RB "# CVS: $Header$"
+.RB ""
+.BR "shopt -s -o nounset" "  # Reports undefined variables"
+.RB ""
+.RB ""
+.RB "# Global declarations"
+.RB ""
+.BR "declare -rx SCRIPT=${0##*/}" "  # The name of this script"
+.BR "declare -rx sync="/usr/bin/sync" "  # The sync" 
+.BR ""
+.BR ""
+.RB "# Sanity checks"
+.RB ""
+.BR "if test -z ""$BASH"" ; then"
+.BR "    printf ""$SCRIPT:$LINENO: please run the script with BASH\en"" >&2"
+.BR "    exit 192
+.BR "fi"
+.BR "if test ! -x ""$sync"" ; then"
+.BR "    printf ""$SCRIPT:$LINENO: command $sync not available: aborting""
+.BR "    exit 192"
+.BR "fi"
+.BR ""
+.BR ""
+.RB "# The Main Script"
+.BR ""
+.BR "sync"
+.BR ""
+.BR ""
+.RB "# Cleanup"
+.BR ""
+.BR "exit 0" "  # All is well"
+.fi
+.in
+
+.SS "Simple commands"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /Simple Commands"
+.fi
+.in
+
+.SS "Pipelines"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /Pipelines"
+.fi
+.in
+
+.SS "Lists"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /Lists"
+.fi
+.in
+
+.SS "Compound commands"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /Compound Commands"
+.fi
+.in
+
+.SS "Script process control. Signals"
+A script exits when it reaches its end. The exit code will be the last command executed. For that reason is better to exit explicitly using these commands:
+
+.in +4n
+.nf
+.BR "shopt -s -o monitor" "  # Enable job control"
+.BR ""
+.BR "sleep 5" "  # Wait for 5 seconds"
+.BR ""
+.BR "suspend" "  # Wait until notified otherwise"
+.BR "kill -SIGSTOP $$" "  # Idem"
+.BR ""
+.BR "trap `printf ""SIGUSR1\en""` SIGUSR1" "  # Create a trap for SIGUSR1"
+.RB ""
+.RB "# Ignore signal during critical code"
+.BR "trap : SIGINT SIGQUIT SIGTERM"
+.RB "# Critical code goes here <--"
+.BR "trap SIGINT SIGQUIT SIGTERM"
+.BR ""
+.BR "trap `printf ""Goodbyte\en""` EXIT" "  # Trap exit (non-existent signal)"
+.BR "exit 0" "  # Finish with exit code 0"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /SIGNALS"
+.RB "$ " "man trap"
+.fi
+.in
+
+.SS "Keyboard input"
+
+.in +4n
+.nf
+.BR "read VAR1" "  # Store input in VAR1"
+.BR "read -p ""Write some input: "" VAR2" "  # Prompts the first argument"
+.BR ""
+.RB "$ " "man read"
+.RB "$ " "help read"
+.fi
+.in
+
+.SS "The colon, no-op or null command"
+
+.in +4n
+.nf
+.RB "$ " ":" "  # Has no effect"
+.RB "$ " ": `date`" "          # Equals to..."
+.RB "$ " "date > /dev/null" "  # ...and discards the output of date"
+.fi
+.in
+
+.SS "Execute scripts"
+
+.in +4n
+.nf
+.RB "$ " "source script.sh" "  # Execute script as if lines were typed"
+.RB "$ " "." "  # Idem"
+.RB "$ " "exec script.sh" "  # Control is taken by the new script"
+.fi
+.in
+
+.SS "Variables (parameters)"
+
+.in +4n
+.nf
+.BR "typeset VAR1" "  # Korn-compatible declaration (obsolete)"
+.BR "declare VAR2" "  # Declare VAR2 variable"
+.BR "VAR2=0" "  # Assign 0 to variable VAR2"
+.BR "printf ""%s"" $VAR2" "  # Substitution of VAR2 for its value"
+.BR "unset VAR2" "  # Destroy VAR2"
+.BR ""
+.BR ""
+.RB "$ " "man bash" "  # /PARAMETERS"
+.RB "$ " "man bash" "  # Predefined variables: /Shell Variables"
+.fi
+.in
+
+Attributes
+
+.in +4n
+.nf
+.BR "declare -i VAR1" "  # Turn on integer attribute, assign strings = 0"
+.BR "declare +i VAR1" "  # Turn off integer attribute"
+.BR "declare -r VAR2 =""List of values""" "  # Read-only variable"
+.BR ""
+.BR "declare -x VAR3" "  # Export: access for children and ¿prompt?"
+.RB "# Exported variables lose their constantness outside the script."
+.RB "# Children's modifications are rolled-back once exited. The only"
+.RB "# way to pass a variable to a parent is to write a file.
+.BR ""
+.BR "declare -p VAR1" "  # Show attributes of a variable"
+.fi
+.in
+
+Arrays
+
+.in +4n
+.nf
+.BR "declare -a ARRAY_VAR" "  # Declare array"
+.BR "declare -a ARRAY[0]=""A"" ARRAY[1]=""B"" ARRAY[2]=""C"""
+.BR "ARRAY[3]=""D"""
+.BR "ARRAY=(""A"" ""B"" ""C"" ""D"")"
+.BR "ARRAY=([3]=""D"" [2]=""C"" [1]=""B"" [0]=""A"")"
+.BR "echo ""${ ARRAY[0] }"""
+.BR "echo ""${ ARRAY }""" "  # Returns the same as ARRAY[0]"
+.BR "echo ""${ ARRAY[*] }""" "  # Returns every item with a IFS separator"
+.BR "echo ""${ ARRAY[@] }""" "  # Returns every item without separation"
+.BR "echo ""${ #ARRAY[*] }""" "  # Returns the number of items in the array"
+.fi
+.in
+
+.SS "Quotations"
+
+.in +4n
+.nf
+.BR "VAR=0" "  # This..."
+.BR "VAR=""0""" "  # ...and this are the same"
+.BR ""
+.RB "# """" are used for word splitting: they define character grouping"
+.BR "NUM=7.25"
+.BR "MESSAGE=""The number """"$NUM"""" is saved.""" "  # Variable separation"
+.BR "printf ""%s"" ""$NUM"""
+.BR "MESSAGE=""The number ${NUM} is saved.""" "  # Alternative way"
+.BR ""
+.RB "# A effect of """" is that no pattern matching is done:"
+.BR "printf ""%s\en"" ""*""" "  # Prints a *"
+.BR ""
+.RB "# '' quotes prevent bash from interpreting the special characters"
+.BR "printf ""%s"" '$BASH'"
+.RB "# \e prevents interpretation for one character"
+.BR "printf ""%s"" ""\e"""""
+.RB ""
+.RB "# Recommended: Using """" for value assignation or substitution."
+.RB "# Not recommended: IFS variable for controlling word splitting.
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /QUOTING
+.fi
+.in
+
+.SS "eval"
+
+.in +4n
+.nf
+.RB "# Normally, substitutions are only made once. Eval command"
+.RB "# can do substitutions on demand."
+.BR "declare -r DISPLAY_VAR='$NUM_VAR'"
+.BR "declare -i NUM_VAR=1000"
+.BR "printf ""%s"" ""$DISPLAY_VAR"""
+.BR "eval printf ""%s"" ""$DISPLAY_VAR"""
+.fi
+.in
+
+.SS "Expressions"
+Operations
+
+.in +4n
+.nf
+.BR "let ""SUM=5+5"""
+.BR "(( SUM=5+5 ))" "  # Double parentheses are an alias for let"
+.BR ""
+.BR "declare -i VAR_I=5"
+.BR "VAR_I=VAR_I+5" "  # If declared with -i, let is not necessary"
+.BR "# Only integer, octal and hexadecimal operations are allowed"
+.RB "$ " "help let"
+.RB ""
+.RB "# Remember that logical truth (a value greater than zero) is not"
+.RB "# the same as the sucess of a command (a status code of zero)!"
+.RB "# To use logical negation in a shell you must disable the shell"
+.RB "# history option."
+.RB ""
+.RB "# Self-referential operators (*=...) cannot be used without let."
+.RB ""
+.BR "let ""TEST=TEST2=5""" "  # Chaining results"
+.BR "let ""SUM=5+5"" ""SUM2=10+5""" "  # Simultaneous evaluations"
+.BR "let ""RESULT=VALUE > 1 ? 1 : 0" "  # Embedded if-else"
+.BR ""
+.BR ""
+.RB "$ " "help let"
+.RB "$ " "man bash" "  # /ARITHMETIC EVALUATION"
+.fi
+.in
+
+Tests
+
+.in +4n
+.nf
+.RB "# File expressions and String expressions"
+.BR ""
+.BR "test -e file.txt" "  # Test if file.txt exists"
+.BR "test ""$VAR1"" \e< ""C""" "  # test if $VAR1 is less than ""C"""
+.RB "$ " "help test"
+.BR "[ -e file.txt ]" "  # Equivalent to test"
+.BR "[[ -e file.txt ]]" "  # Evaluates the conditional expression inside"
+.RB ""
+.BR ""
+.RB "# Boolean combination of tests"
+.BR ""
+.BR "test -e file1.txt -a -e file2.txt" "  # -a switch: AND"
+.BR "test -e file1.txt -o -e file2.txt" "  # -o switch: OR"
+.RB "# They are not equivalent to && and ||. These execute test twice."
+.RB "# -a and -o take precedence over the not operator. To avoid it you"
+.RB "# must use parentheses:"
+.BR "test \e( ! -f file1 \e) -o -f file2"
+.BR ""
+.BR ""
+.RB "$ " "help ["
+.RB "$ " "help test"
+.RB "$ " "man bash" "  # /CONDITIONAL EXPRESSIONS"
+.fi
+.in
+
+.SS "Expansions: globbing/pattern matching"
+Evaluation order:
+
+.in +4n
+.nf
+.RB "1. Filename brace expansion"
+.RB "2. Pathname tilde expansion"
+.RB "3. Dollar, variable expansion"
+.RB "4. Command substitution (performed left to right)"
+.RB "5. Arithmetic expansion"
+.RB "6. Word splitting"
+.RB "7. Pathname expansion (pattern matching)"
+.RB ""
+.RB "Others:"
+.BR "\e{\e}" "  # Substitutes for the file name"
+.BR "{1..10}" "  # Substitutes for a range"
+.fi
+.in
+
+Patterns and substitutions
+
+.in +4n
+.nf
+.RB "# The Korn shell test"
+.BR "[[ $VAR =~ .*test.* ]]" "  # Matches regex .*test.* (works in bash 3.2)
+.BR "[[ $VAR == *test* ]]" "  # Matches *test*
+.BR "[[ $VAR == ""test"" ]]" "  # Match the string "test" literally
+.BR ""
+.BR "ls file.{txt,cpp,py}" "  # Matches the three extensions"
+.BR ""
+.BR "shopt -s extglob" "  # Activate extended globbing"
+.RB ""
+.RB ""
+.RB "Character classes:"
+.RB "[:alpha:]   Alphanumeric"
+.RB "[:alpha:]   Alphabetic"
+.RB "[:ascii:]   ASCII characters"
+.RB "[:blank:]   Space or tab"
+.RB "[:cntrl:]   Control characters"
+.RB "[:digit:]   Decimal digits"
+.RB "[:graph:]   Non-blank characters"
+.RB "[:lower:]   Lowercase characters"
+.RB "[:upper:]   Uppercase characters"
+.RB "[:print:]   Non-control characters"
+.RB "[:punct:]   Punctuation characters"
+.RB "[:space:]   Whitespace"
+.RB "[:word:]    Letters, digits, _"
+.RB "[:xdigit:]  Hexadecimal digits"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /EXPANSION"
+.RB "$ " "man bash" "  # /SIMPLE COMMAND EXPANSION"
+.fi
+.in
+
+.SS "Redirection"
+
+.in +4n
+.nf
+.BR "wc --lines < file.txt" "  # File to program"
+.BR "printf ""Hello world"" > /dev/tty" "  # Explicit send to screen"
+.BR "printf ""Hello world"" > /dev/stdout" "  # Idem"
+.BR "printf ""Hello world"" 1>&2" "  # Redirect std output to std error"
+.BR "printf ""Hello world"" > /dev/stderr" "  # Redirect to standard error"
+.BR "exec 3< readfile.txt" "  # Assign readfile.txt to file descriptor 3"
+.BR "3<>read_write_file.txt" "  # Idem (input/ouput and not reassignable)"
+.BR "</var/log/messages grep foo" "  # You can change the order to ease editing the arguments"
+.RB ""
+.BR "shopt -s -o noclobber" "  # No overwritting files through redirection"
+.BR "printf ""Hello"" >| file.txt" "  # Force even with noclobber option"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /REDIRECTION"
+.RB "$ " "help exec"
+.RB "$ " "man exec"
+.fi
+.in
+
+.SS "Built-in and external commands"
+Bash implements a series of fundamental commands for efficiency. However, you can choose whether to use built-in or external programs. Is more recommended to enable and disable built-in commands than explicitly call them.
+
+.in +4n
+.nf
+.RB "$ " "type pwd" "  # Check whether pwd is a command or a built-in"
+.RB "$ " "builtin pwd" "  # Run the built-in"
+.RB "$ " "command pwd" "  # Run the external command"
+.RB "$ " "enable test" "  # Enable test built-in"
+.RB "$ " "enable -n test" "  # Enable test external command"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /SHELL BUILTIN COMMANDS"
+.fi
+.in
+
+.SS "Unsafe use of commands without switches across OS"
+It's not safe to use some commands in a script without specifying the appropite switches, because you can't be sure which defaults a distribution uses.
+
+.in +4n
+.nf
+.BR "ls"
+.BR "ps"
+.fi
+.in
+
+.SS "Functions"
+Functions in bash return a status code instead of a return value. They have parameters, but $0 remains the pathname of the script. $# indicates the number of parameters. When the functions completes, the parameter variables are stored to their previous values. Bash functions can be nested or used recursively.
+
+.in +4n
+.nf
+.BR "function foo {
+.BR "    local VAR1" "  # Create local variable VAR1, although is highly"
+.RB "                # recommended to use declare!!"
+.BR "    VAR2=""content""" "  # Create variables without definition does not"
+.RB "                    # destroy them when leaving the function. For"
+.RB "                    # backward compatibility, sould be avoided!!"
+.BR "    return 0" "  # Return a status without leaving the script"
+.BR "}"
+.BR ""
+.BR "export -f foo" "  # Export the function"
+.BR "unset -f foo" "  # Discard the function"
+.BR "readonly -f foo" "  # Make the function read-only"
+.fi
+.in
+
+.SH --- SPECIFIC TASKS
+.BR
+.SS "Input parameters"
+Positional parameters
+
+.in +4n
+.nf
+.RB "$*       List of parameters (as a single group)"
+.RB "$@       List of parameters (as individual items)"
+.RI "$" "n" "       Access parameter n"
+.RB "$#       The number of positional parameters"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /Special Parameters"
+.fi
+.in
+
+getopts
+
+.in +4n
+.nf
+.RB "List of parameters:"
+.RB ":hc:     : (hide error message)"
+.RB "         -h"
+.RB "         -c"
+.RB "         : (previous switch has arguments)"
+.RB "# You can also hide errors setting OPTERR to 0"
+.RB ""
+.RB ""
+.RB "$ " "man bash" "  # /getopts"
+.RB "$ " "man 1p getopts"
+.RB "$ " "man 1p getopts" "  # / EXAMPLES"
+.fi
+.in
+
+getopt (adheres to Linux switch standards)
+
+.in +4n
+.nf
+.RB "$ " "man getopt"
+.RB "$ " "ls /usr/share/getopt" "  # getopt examples"
+.fi
+.in
+
+.SS "Subshells"
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /Compound Commands"
+.RB "$ " "man bash" "  # /COMMAND EXECUTION"
+.fi
+.in
+
+.SS "Dealing with files"
+
+.in +4n
+.nf
+.BR "basename /data/essentials/man/man7/_bash.7" "  # _bash.7"
+.BR "basename /data/essentials/man/man7/_bash.7 .7" "  # _bash"
+.BR "dirname /data/essentials/man/man7/_bash.7"
+.RB "# /data/essentials/man/man7"
+.BR "pathchk ""~/x"" && echo ""Acceptable path"""
+.BR "stat -t file.txt" "  # Stat presenting info in a script-readable way"
+.BR "ftp -i -n -v << !" "  # After the ! place the commands for connection"
+.fi
+.in
+
+.SS "FIFOs"
+
+.in +4n
+.nf
+.RB "$ " "mkfifo file.fifo"
+.RB "$ " "ls -l > file.fifo &"
+.RB "$ " "sh read.sh"
+.RB ""
+.RB "# read.sh (only critical region)"
+.BR "{"
+.BR "    while read LINE; do"
+.BR "        printf ""%s: \en"" ""$LINE"""
+.BR "    done
+.BR "} < file.fifo"
+.fi
+.in
+
+.SS "Job control and Signals"
+
+.in +4n
+.nf
+.RB "$ " "sleep 60 &" "  # & starts in background"
+.RB "$ " "jobs -l" "  # List jobs"
+.RB "$ " "jobs -x echo %1" "  # Execute with job string substitution"
+.RB "$ " "fg" "  # Bring to foreground"
+.RB "$ " "wait" "  # Wait until all the background tasks are finished"
+.RB "$ " "kill %1" "  # Kill the first background task"
+.BR "       %%" "  # Kill the current background task"
+.BR "       %+" "  # Idem"
+.BR "       %-" "  # Kill the last background task started"
+.BR "       %?" "  # Kill searching for jobs containing string"
+.RB "$ " "kill %?sle" "  # (example)"
+.RB "$ " "disown -h" "  # SIGHUP is sent to all running jobs when exiting"
+.RB "$ " "shopt -s huponexit" "  # Idem behavior"
+.RB ""
+.RB ""
+.RB "$ " "man nice"
+.RB "$ " "man renice"
+.fi
+.in
+
+.SS "Text output"
+
+.in +4n
+.nf
+.RB "$ " "printf ""%f\en"" 5"
+.RB "$ " "ERRMSG=""warning! low system resources"""
+.RB "$ " "printf ""%s\en"" ""$ERRMSG"" | tr [:lower:] [:upper:]"
+.RB "$ " "tr [:lower:] [:upper:] <<< ""$ERRMSG""" "  # Same as above"
+.RB ""
+.RB "$ " "printf ""%d\en"" 0xF" "  # Hexadecimal numbers start with 0x"
+.RB "$ " "printf ""%d\en"" 010" "  # Octal numbers start with 0"
+.RB ""
+.RB "$" "tput cols" "  # Check number of columns in current terminal"
+.RB "$" "man tput"
+.fi
+.in
+
+Format codes
+
+.in +4n
+.nf
+.RB "%a          Floating-point number in hexadecimal (lowercase)"
+.RB "%A          Floating-point number in hexadecimal (uppercase)"
+.RB "%b          Expand backslash sequences"
+.RB "%c          Single character"
+.RB "%d,%i       Signed number"
+.RB "%f, %F      Floating-point"
+.RB "%e          Floating-point in scientific notation"
+.RB "%g          Let Bash choose %e or %f"
+.RB "%0          Octal number"
+.RB "%q          Quote a string so it can be read properly by a script"
+.RB "%s          Unquoted string"
+.RB "%u          Unsigned number"
+.RB "%x          Unsigned hexadecimal number (lowercase)"
+.RB "%X          Unsigned hexadecimal number (uppercase)"
+.RB "%%          Display a % character"
+.RB "%j,%t,%z    Same as %d, provided for C compatibility"
+.RB ""
+.RI "%l" "a" ",%L" "a" "     Indicate long number (" "a" " is any format code)"
+.RI "%{" "n" "}" "a" "       Create a column of " "n " "width (" "a" " is any format code)"
+.RI "%-{" "n" "}" "a" "      Idem (left-justified)"
+.RI "%{" "n" "}.{" "n" "}" "a" "   Idem with number of decimal places"
+.fi
+.in
+
+Special characters
+
+.in +4n
+.nf
+.RB "\eb          Backspace"
+.RB "\ef          Form feed (eject a page on a printer)"
+.RB "\en          Start a new line"
+.RB "\er          Carriage return"
+.RB "\et          Tab"
+.RB "\ev          Vertical tab"
+.RB "\e'          Single quote character (for C compatibility)
+.RB "\e\e          Backslash"
+.fi
+.in
+
+.SS "Menus"
+
+.in +4n
+.nf
+.BR "select ITEM in ""first"" ""second"" ""third"" ; do"
+.BR "    if [ -z ""$ITEM"" ] ; then"
+.BR "        printf ""Please chose 1, 2, or 3...\en"""
+.BR "    else"
+.BR "        printf ""Processing $ITEM...\en"""
+.BR "    fi"
+.BR "done"
+.BR "printf ""Done\en"""
+.RB ""
+.RB "# The prompt is in variable PS3"
+.RB ""
+.RB "$ " "help select"
+.fi
+.in
+
+.SS "Dialogs"
+
+.in +4n
+.nf
+.RB "$ " "man dialog"
+.fi
+.in
+
+.SS "Permissions"
+
+.in +4n
+.nf
+.RB "1 (octal 1)          others execute"
+.RB "2 (octal 2)          others write"
+.RB "4 (octal 4)          others read"
+.RB "8 (octal 10)         group execute
+.RB "16 (octal 20)        group write"
+.RB "32 (octal 40)        group read"
+.RB "64 (octal 100)       user execute"
+.RB "128 (octal 200)      user write"
+.RB "256 (octal 400)      user read"
+.RB "512 (octal 1000)     sticky bit"
+.RB "1024 (octal 2000)    set gid"
+.RB "2048 (octal 4000)    set uid"
+.RB ""
+.RB "For directories:        write -> create new files"
+.RB "                         read -> read contents"
+.RB "                      execute -> search directory"
+.RB ""
+.RB "For scripts: execution needs reading"
+.RB ""
+.RB ""
+.RB "$ " "man umask"
+.RB "$ " "help umask"
+.fi
+.in
+
+.SS "Security"
+Chroot
+
+.in +4n
+.nf
+.RB "$ " "man chroot"
+.fi
+.in
+
+Resource limits
+
+.in +4n
+.nf
+.RB "$ " "man ulimit"
+.fi
+.in
+
+Restricted shell
+
+.in +4n
+.nf
+.RB "$ " "man bash" "  # /RESTRICTED SHELL"
+.fi
+.in
+
+.SS "Network"
+Communicating with servers
+
+.in +4n
+.nf
+.BR "exec 3<> /dev/tcp/localhost/80" "  # File 3 -> port 80, localhost"
+.BR "exec 3<>/dev/tcp/www.google.com/80" "  # File 3 -> port 80, google"
+.BR "echo -e "GET / HTTP/1.1\en\en">&3"
+.BR "cat <&3"
+.fi
+.in
+
+CGI programming
+
+.in +4n
+.nf
+.RB "# Place file in cgi-bin directory of web server"
+.BR ""
+.BR "declare GATEWAY_INTERFACE"
+.BR ""
+.BR "if [ -z ""GATEWAY_INTERFACE"" ] ; then"
+.BR "    printf ""%s\en"" ""This script should be run by a web browser"" >&2"
+.BR "    exit 192"
+.BR "fi"
+.RB "# Header (for plain text)"
+.BR "printf ""Content-type: text/plain\er\en"""
+.BR "printf ""\er\en"""
+.BR ""
+.BR "env" "  # Example of text generation: output system variables"
+.RB ""
+.RB ""
+.RB "/data/essential/books/Linux\ Shell\ Scripting\ with\ Bash.pdf # p.311"
+.fi
+.in
+
+.SS "Running scripts from C"
+
+.in +4n
+.nf
+.RB "/* Run a bash command from C using system */"
+.RB "/* Two shell sessions created: for system and to run the script */"
+.RB "/* Do not use for wrapping programs with setuid priviledges*/"
+.BR ""
+.BR "#include <stdio.h>
+.BR "#include <stlib.h>
+.BR ""
+.BR "int main()"
+.BR "{"
+.BR "    int result;"
+.BR "    result = system(""ls -l *"" );"
+.BR "    return 0;"
+.BR "}"
+.BR ""
+.RB "/* Run a bash command from C using popen */"
+.BR "#include <stdio.h>
+.BR "#include <stlib.h>
+.BR ""
+.BR "int main()"
+.BR "{"
+.BR "    FILE *f = NULL;
+.BR "    char s[255] = """";"
+.BR "    f = popen(""/bin/bash -c `ls -l *`"", ""r"");" " /* open pipe */"
+.BR "    while( !feof(f) ) {"
+.BR "        fgets(s, 255, f);" " /* Get next line */"
+.BR "        printf(""%s"",s);"
+.BR "    }"
+.BR "    pclose(f);" " /* Close pipe */"
+.BR "    return 0;"
+.BR "}"
+.RB ""
+.RB ""
+.RB "$ " "man 3 system"
+.RB "$ " "man 3 exec
+.RB "$ " "man 3p environ"
+.fi
+.in
+
+.SH --- DEBUGGING
+.BR
+.SS "Debugging features"
+
+.in +4n
+.nf
+.RB "$ " "bash -n script.sh" "  # Check script for errors without executing"
+.BR "shopt -o errexit" "  # Terminate the shell script if a command"
+.RB "                  # returns an error (not recommended)"
+.BR "shopts -o nounset" "  # Terminate if unset variables referenced"
+.BR "shopts -o xtrace" "  # Display each command before executed"
+.RB "# PS4 contains the prompt for tracing"
+.RB ""
+.RB "# Combining trace with debug trap and null command:"
+.BR "trap `: CNT is now $CNT' DEBUG
+.BR ""
+.BR ""
+.RB "$ " "man bash" "  # /SIGNALS"
+.RB "$ " "man trap"
+.RB "$ " "help trap"
+.fi
+.in
+
+.SS "Commands for debugging"
+
+.in +4n
+.nf
+.RB "$ " "bash script.sh >& | tee output.txt" "  # Capture both standard output"
+.RB "                             # and standard error and pipe it to tee"
+.RB "$ " "script" "  # Record script command, including input"
+.RB "$ " "exit" "  # Stop record command"
+.RB "$ " "time script.sh" "  # Measure elapsed time"
+.RB "$ " "time script.sh > /dev/null" "  # Avoid measuring terminal output"
+.RB "$ " "command time script.sh" "  # Use linux time program"
+.fi
+.in
+
+.SH --- BEST PRACTICES
+.BR
+.SS "Overwriting files"
+In linux filesystems (including ext3) space is never released for a file. If you overwrite a 1MB file with a 1 byte one, the size will still be 1MB. You should then remove and re-create the file. This happens also with directories and the space reserved for its files.
+
+.SS "Deleting files"
+Avoid using "rm -R" or globbing, instead use "find" and pipe the files to "rm", so errors can be detected on time.
+
+.SS "Temporary files"
+.in +4n
+.nf
+.BR "TMP=""/tmp/tmp.$$""" "  # Traditional way of naming temp files"
+.BR "TMP=`mktemp /tmp/tmp.XXXXXX`" "  # Safer way"
+.fi
+.in
+
+.SS "Lock files"
+Most GNU/Linux distributions include a directory called /var/lock, a standard location ot place lock files.
+
+.SS "Cron and scripts"
+When a shell script is started by
+.B cron
+, it is not started from a login session and none of the profile files are executed. Anything that is normally written to standard output is instead captured by cron and mailed to the account owning the cron script. It is a common practice to write a wrapper script to capture the output into a log from a script doing the actual work.
+
+.SS "Continually executing scripts"
+The command
+.B nohup
+runs a program so that it will not quit after a session has disconnected. If standard output is open it redirects it to a file called nohup.out. A good design practice is to close standard output or redirect it using exec with a front-end scrip to the daemon script.
+
+.in +4n
+.nf
+.BR "exec 1>$DAEMON_LOG"
+.BR "exec 2>&1"
+.fi
+.in
+
+.SS "Reporting errors"
+Using $SCRIPT: $FUNCNAME: when reporting errors is recommended.
+
+.SS "Scripts and setuid/setgid"
+As a script is data, not a compiled program, the permissions for running the script depend on the ownership of the user running it (you can't use 
+.B setuid/setgid
+with the script". You have to create a short C "wrapper" and set the 
+.B setuid/setgid
+on the C program. This is risky: it is easy to forget either the wrapper or the script when changing permissions. A good alternative is the
+.B sudo
+program.

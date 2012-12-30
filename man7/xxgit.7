@@ -1,0 +1,13 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH GIT_TRICKS 7 2010-10-10 "Reference" "Alvaro Castro Castilla"
+
+
+.SS "Extract folders as libraries"
+git filter-branch --subdirectory-filter Project/SubProject-0 --prune-empty -- --all
+
+.SS "Include more edits in the last commit"
+git commit --amend -a

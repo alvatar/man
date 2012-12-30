@@ -1,0 +1,397 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH C-C++_DIFFERENCES 1 2009-02-27 "Reference" "Alvaro Castro Castilla"
+.SH C / C++: DIFFERENCES AND GOTCHAS
+There are a few gotchas for C++ programmers trying to write C code, and C programmers trying to compile with a C++ compiler.
+
+
+.SH BASIC GOTCHAS FOR A C PROGRAMMER USING C++
+.BR
+.SS "Implicit cast from void*"
+You cannot implicitly assign from a void* to any other type:
+
+.in +4n
+.nf
+.BR "int *x = malloc(sizeof(int) * 10);" "  /* C++ won't compile */"
+.BR "int *x = (int *) malloc(sizeof(int) * 10);" "  /* Compiles both C and C++ */"
+.fi
+.in
+
+.SS "Freeing arrays: new[] and delete[]"
+In C, there's only one major memory allocation function: malloc(). You use it to allocate both single elements and arrays; then release the memory using free():
+
+.in +4n
+.nf
+.BR "int *x = malloc( sizeof(int) );"
+.BR "int *x_array = malloc( sizeof(int) * 10 );"
+.BR ""
+.BR "free( x );"
+.BR "free( x_array );"
+.fi
+.in
+
+In C++, however, memory allocation for arrays is somewhat different; you use the new[] operator, and you must match calls to new[] with calls to delete[] (rather than to delete):
+
+.in +4n
+.nf
+.BR "int *x = new int;"
+.BR "int *x_array = new int[10];"
+
+.BR "delete x;"
+.BR "delete[] x;"
+.fi
+.in
+
+.SS "Declare functions before use"
+Although most good C code will follow this convention, in C++ it is strictly enforced that all functions must be declared before they are used. This code is valid C, but it is not valid C++:
+
+.in +4n
+.nf
+.BR "#include <stdio.h>"
+.BR "int main()"
+.BR "{"
+.BR "    function();" "  /* This will compile in C, but not in C++ */"
+.BR "    return 0;"
+.BR "}"
+.BR ""
+.BR "int function()"
+.BR "{"
+.BR "    printf( ""Hello world"" );"
+.BR "}"
+.fi
+.in
+
+.SH BASIC GOTCHAS FOR A C++ PROGRAMMER USING C
+.BR
+.SS "C++ has a larger library"
+C++ has a much larger library than C, and some things may be automatically linked in by C++ when they are not with C. For instance, you have to link the math library for function like sqrt()."
+
+.in +4n
+.nf
+.BR "$ g++ main.cpp"
+.BR "$ gcc main.c -lm"
+.fi
+.in
+
+.SS "No boolean type"
+C does not provide a boolean type. You can simulate it using enum:
+
+.in +4n
+.nf
+.BR "typedef enum {FALSE, TRUE} bool;"
+.fi
+.in
+
+Sometimes preprocessor macros are used:
+
+.in +4n
+.nf
+.BR "#define FALSE 0"
+.BR "#define TRUE 1" "  /* Defined as the integer 1 */
+.BR "#define TRUE -1" "  /* All bits set to 1 on two's complement architectures */"
+.BR "#define TRUE ~0" "  /* Defined as the bitwise complement of 0 */
+.fi
+.in
+
+In C99, there is a _Bool type. When any scalar value is converted to _Bool, the result is 0 if the value is 0, otherwise 1.
+
+.in +4n
+.nf
+.BR "#include <stdbool.h>
+.BR "int main()"
+.BR "{"
+.BR "    bool b = false;"
+.BR "    b = true;"
+.BR "}"
+.fi
+.in
+
+.SS "Structs and Enums"
+You have to include the struct keyword before the name of the struct type to declare a struct. A similar situation also holds for declaring enums.
+
+.in +4n
+.nf
+.BR "struct a_struct {"
+.BR "    int x;"
+.BR "};" "  /* This defines a typedef only in C++ */"
+.BR ""
+.BR "a_struct struct_instance;" "  /* Invalid C declaration! */"
+.BR "struct a_struct struct_instance;" "  /* Valid C and C++ declaration */"
+.fi
+.in
+
+Most C programmers get around this issue by ussing typedefs:
+
+.in +4n
+.nf
+.BR "typedef struct struct_name {" "  /* struct_name can be ommited  */"
+.BR "    char x;"
+.BR "} name_typedef;" "  /* This defines a typedef for both C and C++ */"
+.BR ""
+.BR "name_typedef struct_name_t_instance;" "  /* Valid C and C++ declaration */"
+.fi
+.in
+
+However, you must still use the "struct struct_name" syntax to declare a pointer inside the struct of the same type:
+
+.in +4n
+.nf
+.BR "typedef struct struct_name {" "  /* struct_name can be ommited  */"
+.BR "    struct struct_name* instance;" "  /* CHECK C++!!  Valid C and C++ declaration */"
+.BR "    struct_name* instance;" "  /* CHECK C++!!  Invalid C declaration! */"
+.BR "    name_typedef* instance;" "  /* Invalid C and C++ declaration! */"
+.BR "} name_typedef;"
+.BR ""
+.BR "struct struct_name2 {"
+.BR "    struct_name2* ptr;" "  /* This works in C++ */"
+.BR "};"
+.BR ""
+.BR "typedef struct struct_name name_typedef;
+.BR "struct struct_name {"
+.BR "    name_typedef *next;" "  /* This works in C */"
+.BR "};"
+.fi
+.in
+
+And they shouldn't be confused with the next construct. This declares a variable of type struct, allocating memory:
+
+.in +4n
+.nf
+.BR "struct {"
+.BR "    int data;"
+.BR "} var;" "  /* Variable var is created */"
+.fi
+.in
+
+
+.SS "Main return value"
+In C++, you are free to leave off the statement 'return 0;' at the end of main; it will be provided automatically:
+
+.in +4n
+.nf
+.BR "int main()"
+.BR "{"
+.BR "    printf( ""Hello, World"" );"
+.BR "    return 0;" "  /* Unnecesary in C++ */"
+.BR "}"
+.fi
+.in
+
+.SH INTERMIXING C AND C++
+.BR
+.SS "Using compatible compilers"
+The first requirement for mixing code is that the C and C++ compilers you are using must be compatible. They must, for example, define basic types such as int, float or pointer in the same way. The C runtime library used by your C compiler must also be compatible with the C++ compiler. C++ includes the standard C runtime library as a subset, with a few differences. If the C++ compiler provides its own versions of of the C headers, the versions of those headers used by the C compiler must be compatible. The Operating System usually specifies the Application Binary Interface (ABI) of C programs, which includes information about basic types and how functions are called.
+
+Even if your program is primarily C code but makes use of C++ libraries, you need to link C++ runtime support libraries provided with the C++ compiler into your program. The easiest and best way to do that is to use the C++ compiler driver to do the linking. The necessary C++ runtime libraries like libCrun and libCstd are linked automatically. If you can't use the C++ compiler for some reason, you can use the -dryrun option of the CC command to get the list of commands the compiler issues, and capture them into a shell script.
+
+.SS "C and C++ linkage"
+The object files their respective compilers produce can have important differences that manifest themselves when intermixing C and C++ code. Notably:
+
+.in +4n
+* C compilers do not name mangle symbols in the way that C++ compilers do.
+
+* Depending on the compiler and architecture, it also may be the case that calling conventions differ between the two languages.
+.in
+
+For these reasons, for C++ code to call a C function foo(), the C++ code must prototype foo() with extern "C":
+
+.in +4n
+.nf
+.BR "#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+.BR "extern ""C"" {"
+.BR "#endif"
+.BR ""
+.BR "void foo();" "  /* These functions get C linkage */"
+.BR ""
+.BR "#ifdef __cplusplus" "  /* If this is a C++ compiler, end C linkage */"
+.BR "}"
+.BR "#endif"
+.fi
+.in
+
+You can declare at most one function of an overloaded set as extern "C" because only one C function can have a given name. Linkage types can be mixed this way:
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR ""
+.BR "    void f();" "                   /* C linkage */"
+.BR "    extern ""C++"" {"
+.BR "        void g();" "               /* C++ linkage */"
+.BR "        extern ""C"" void h();" "    /* C linkage */"
+.BR "        void g2();" "              /* C++ linkage */"
+.BR "    }"
+.BR "    extern ""C++"" void k();" "      /* C++ linkage */"
+.BR "    void m();" "                   /* C linkage */"
+.BR ""
+.BR "}"
+.fi
+.in
+
+If you want to use a C library with its own defining header that was intended for C compilers, you can include the header in extern "C" brackets:
+
+.in +4n
+.nf
+.BR "extern ""C"" {
+.BR "    #include ""header.h"""
+.BR "}"
+.fi
+.in
+
+.SS "Pointers to functions"
+
+Differences between C and C++ linkage and calling conventions can also have subtle implications for code that uses function pointers. Some compilers will produce non-working code if a function pointer declared extern "C" points to a C++ function that is not declared extern "C":
+
+.in +4n
+.nf
+.BR "void my_function();"
+.BR "extern ""C"" void foo(void (*fn_ptr)(void));"
+.BR ""
+.BR "void bar()"
+.BR "{"
+.RB "    /* foo() is a C function that takes a pointer"
+.RB "     * to my_function(), a C++ function"
+.RB "     */"
+.BR "    foo(my_function);"
+.BR "}"
+.fi
+.in
+
+Pointers to functions have one other subtlety that occasionally traps programmers. A linkage specification applies to all the parameter types and to the return type of a function. If you use the elaborated declaration of a pointer-to-function in a function parameter, a linkage specification on the function applies to the pointer-to-function as well. If you declare a pointer-to-function using a typedef, the linkage specification of that typedef is not affected by using it in a function declaration. For example, consider this code:
+
+.in +4n
+.nf
+.BR "typedef int (*pfn)(int);"
+.BR "extern ""C"" void foo(pfn p) { ... }" "  /* Definition */"
+.BR "extern ""C"" void foo( int (*)(int) );" "  /* Declaration */"
+.fi
+.in
+
+Although you intended for the declaration of foo and its definition to match, they do not. The definition of foo takes a pointer to a C++ function, but the declaration of foo takes a pointer to a C function. The code declares a pair of overloaded functions.
+
+.SS "Working with C++ Exceptions"
+The best advice is not to use long_jmp in programs that contain C++ code. The C++ exception mechanism and C++ rules about destroying objects that go out of scope are likely to be violated by a long_jmp, with unpredictable results. Some compilers integrate exceptions and long_jmp, allowing them to work together, but you should not depend on such behavior.
+
+.SS "Accessing C++ Classes From C"
+Suppose you have a C++ class such as the following:
+
+.in +4n
+.nf
+.BR "class M {"
+.BR "public:"
+.BR "    virtual int foo(int);"
+.BR "private:""
+.BR "    int i, j;"
+.BR "};"
+.fi
+.in
+
+You cannot declare class M in your C code. The best you can do is to pass around pointers to class M objects, similar to the way you deal with FILE objects in C Standard I/O. You can write extern "C" functions in C++ that access class M objects and call them from C code. Here is a C++ function designed to call the member function foo:
+
+.in +4n
+.nf
+.BR "extern ""C"" int call_M_foo(M* m, int i) { return m->foo(i); }"
+.fi
+.in
+
+Here is an example of C code that uses class M:
+
+.in +4n
+.nf
+.BR "struct M;" "  /* You can supply only an incomplete declaration */"
+.BR "int call_M_foo(struct M*, int);" "  /* Declare the wrapper function */"
+.BR "int f(struct M* p, int j)" "  /* Now you can call M::foo */"
+.BR "{"
+.BR "    return call_M_foo(p, j);"
+.BR "}"
+.fi
+.in
+
+.SS "Adding C++ features to C structs"
+Suppose that instead of using C-style access you might want to add member functions, maybe virtual functions, possibly derive from the class, and so on. Consider the uses of the C struct buf in the following example:
+
+.in +4n
+.nf
+.BR "struct buf {"
+.BR "    char* data;"
+.BR "    unsigned count;"
+.BR "};"
+.BR "void buf_clear(struct buf*);"
+.fi
+.in
+
+You want to turn this struct into a C++ class and make it easier to use with the following changes:
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR "  #include ""buf.h"""
+.BR "}"
+.BR "class mybuf {"
+.BR "public:"
+.BR "    mybuf() : data(0), count(0) { }"
+.BR "    void clear() { buf_clear((buf*)this); }"
+.BR "private:"
+.BR "    char* data;"
+.BR "    unsigned count;"
+.BR "};"
+.fi
+.in
+
+Does the this pointer point to the data member, as a pointer to buf does? What if you add virtual functions to mybuf? The C++ standard makes no promises about the compatibility of buf and class mybuf. This code, without virtual functions, might work, but you can't count on it. If you add virtual functions, the code will fail using compilers that add extra data (such as pointers to virtual tables) at the beginning of a class. 
+
+The portable solution is to leave struct buf strictly alone, even though you would like to protect the data members and provide access only through member functions. You can derive a C++ class mybuf from the C struct buf, and pass pointers to the buf base class to the mybuf functions. If a pointer to mybuf doesn't point to the beginning of the buf data, the C++ compiler will adjust it automatically when converting a mybuf* to a buf*.
+
+.in +4n
+.nf
+.BR "extern ""C"" {"
+.BR "  #include ""buf.h"""
+.BR "}"
+.BR "class mybuf : public buf { // a portable solution"
+.BR "public:"
+.BR "    mybuf() : data(0), count(0) { }"
+.BR "    void clear() { buf_clear(this); }"
+.BR "};"
+.fi
+.in
+
+.SH DETAILED: INCOMPATIBILITIES C89/C90 VS C++98 (NO LONGER IN C99)
+.BR
+.SS "Aggregate Initializers"
+C90 requires automatic and register variables of aggregate type (struct, array, or union) to have initializers containing only constant expressions. C++ allows non-constant expressions to be used in initializers for automatic and register variables. (It also allows arbitrary non-constant expressions to be used to initialize static and external variables).
+
+.in +4n
+.nf
+.BR "void foo(int i)"
+.BR "{
+.BR "    float   x = (float)i;" "  /* Valid C90, C99, and C++ */
+.BR "    int     m[3] = { 1, 2, 3 };" "  /* Valid C90, C99, and C++ */
+.BR "    int     g[2] = { 0, i };" "  /* Invalid C90 */
+.BR "}"
+.fi
+.in
+
+
+.in +4n
+.nf
+
+.fi
+.in
+.B REG_EXTENDED
+Use
+.B POSIX
+Extended Regular Expression syntax when interpreting
+.IR regex .
+If not set,
+.B POSIX
+Basic Regular Expression syntax is used.
+.TP
+.B REG_ICASE
+Do not differentiate case.
+Subsequent
+.BR regexec ()
+searches using this pattern buffer will be case insensitive.
+.TP

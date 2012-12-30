@@ -1,0 +1,372 @@
+.\" Álvaro Castro Castilla
+.de xx
+.in \\n(INu+\\$1
+.ti -\\$1
+..
+.TH COMMAND_LISTING 7 2009-05-07 "Reference" "Alvaro Castro Castilla"
+
+
+.SH --- CONSOLE/TERMINAL/X
+.SS "dialog"
+display dialog boxes from shell scripts
+.SS "fgconsole"
+print the number of the active VT
+.SS "setterm"
+set terminal attributes
+.SS "stty"
+change and print terminal line settings
+.SS "tput, reset"
+initialize a terminal or query terminfo database
+.SS "tty"
+print the file name of the terminal connected to standard input
+.SS "xset"
+user preference utility for X
+.in +4n
+.nf
+.RB "$ " "xset s off" "  # Switch off the blank screen"
+.RB "$ " "xset s 300" "  # Set the blank screen to 5 mins"
+.fi
+.in
+
+
+
+
+.SH --- COMPILATION, DEBUGGING AND EXECUTION
+.SS "ar"
+create, modify, and extract from archives
+.in +4n
+.nf
+.RB "$ " "ar rcs libasdf.a *.o" "  # Create static library asdf.a from object files"
+.fi
+.in
+.SS "ldd"
+print shared library dependencies
+.SS "nm"
+list symbols from object files
+.SS "strace"
+trace system calls and signals
+.SS "strip"
+discard symbols from object files
+
+
+
+
+.SH --- DEVICES
+.SS "dumpkeys"
+dump keyboard translation tables
+.SS "setleds"
+set the keyboard leds
+.SS "showkey"
+examine the codes sent by the keyboard
+
+
+
+
+.SH --- FILES AND FILESYSTEM
+.SS "basename"
+strip directory and suffix from filenames
+.SS "cd"
+change the working directory
+.SS "cp"
+copy files and directories
+.in +4n
+.nf
+.RB "$ " "cp filename{,.bak}" "  # Backup or copy a file with bash"
+.fi
+.in
+.SS "dd"
+convert and copy a file
+.SS "df"
+report file system disk space usage
+.in +4n
+.nf
+.RB "$ " "watch --differences -n 5 'df; ls -FlAt;'" "  # Monitorize changes in files"
+.fi
+.in
+.SS "dirname"
+strip non-directory suffix from file name
+.SS "du"
+estimate file space usage
+.SS "file"
+determine file type
+.SS "find"
+search for files in a directory hierarchy
+.in +4n
+.nf
+.RB "$ " "find . -name "*.wav" -exec basename \{\} .wav \;" "  # List file names without the .wav extension"
+.fi
+.in
+.SS "locate, slocate"
+list files in databases that match a pattern
+.SS "ls"
+list directory contents
+.SS "mkdir"
+make directories
+.SS "mktemp"
+create a temporary file or directory
+.SS "mount, umount"
+mount a file system
+.in +4n
+.nf
+.RB "$ " "mount -t tmpfs tmpfs /mnt -o size=1024m" "  # Mount a temporary ram partition"
+.fi
+.in
+.SS "mv"
+move (rename) files
+.SS "namei"
+follow a pathname until a terminal point is found
+.SS "pathchk"
+check whether file names are valid or portable
+.SS "pwd"
+print name of current/working directory
+.SS "rm"
+remove files or directories
+.SS "stat"
+display file or file system status
+.SS "tar"
+the tar archiving utility
+.SS "touch"
+change file timestamps
+.SS "whereis"
+locate the binary, source, and manual page files for a command
+.SS "which"
+shows the full path of (shell) commands
+
+
+
+
+.SH --- GENTOO
+.SS "demerge"
+revert to previous installation states
+.SS "equery"
+package query tool
+
+
+
+
+.SH --- INTERPRETERS
+.SS "pyhton"
+an interpreted, interactive, object-oriented programming language
+.in +4n
+.nf
+.RB "$ " "python -m SimpleHTTPServer" "  # Serve current directory tree at http://$HOSTNAME:8000/"
+.fi
+.in
+
+
+
+
+.SH --- MEDIA
+.SS "lame"
+create mp3 audio files
+.in +4n
+.nf
+.RB "$ " "find . -name "*.wav" -exec basename \{\} .wav \; | xargs -i echo lame \{\}.wav \{\}.mp3" "  # Convert all .wav files into .mp3"
+.fi
+.in
+.SS "mplayer"
+movie player
+.in +4n
+.nf
+.RB "$ " "mplayer -cache 400 -cdrom-device /dev/cdrom1 cdda://" "  # Play audio cd setting cache"
+.fi
+.in
+
+
+
+
+.SH --- MISCELLANEA
+.SS "date"
+print or set the system date and time
+.SS "xargs"
+build and execute command lines from standard input
+
+
+
+
+.SH --- NETWORK
+.SS "hostid"
+print the numeric identifier for the current host
+.SS "hostnamei, domainname, dnsdomainname, nisdomainname, ypdomainname, nodename"
+show or set the system's $* name
+.SS "iftop"
+display bandwidth usage on an interface by host
+.SS "iptraf"
+interactive colorful ip lan monitor
+.SS "lynx"
+a general purpose distributed information browser for the World Wide Web
+.SS "mtr"
+a network diagnostic tool
+.SS "netstat"
+Print network connections, routing tables, interface statistics, masquerade connections, and multicast memberships
+.in +4n
+.nf
+.RB "$ " "netstat -tlnp" "  # Lists all listening ports together with the PID of the associated process"
+.fi
+.in
+.SS "nmap"
+.in +4n
+.nf
+.RB "$ " "nmap -sP 192.168.1.1/24" "  # Find active ip's in network"
+.fi
+.in
+.SS "scp"
+secure copy (remote file copy program)
+.SS "sftp"
+secure file transfer program
+.SS "slurm"
+network load monitor
+.SS "socat"
+multipurpose relay (SOcket CAT)
+.SS "ssh"
+openSSH SSH client (remote login program)
+.SS "sshfs"
+Secure remote file system
+.in +4n
+.nf
+.RB "$ " "sshfs name@server:/path/to/folder /path/to/mount/point" "  # Mount folder/filesystem through SSH"
+.fi
+.in
+.SS "wget"
+the non-interactive network downloader
+
+
+
+
+.SH --- PROCESSES
+.BR
+.SS "kill"
+send a signal to a process
+.SS "killall"
+kill processes by name
+.SS "nice"
+run a program with modified scheduling priority
+.SS "ps"
+report a snapshot of the current processes
+.in +4n
+.nf
+.RB "$ " "ps -eLf" " # THREADS TODO"
+.RB "$ " "ps axms" " # IDEM"
+.fi
+.in
+.SS "renice"
+alter priority of running processes
+.SS "sleep"
+delay for a specified amount of time
+
+
+
+
+.SH --- SECURITY
+.SS "chgrp"
+change group ownership
+.SS "chmod"
+change file mode bits
+.SS "chown"
+change file owner and group
+.SS "cksum"
+checksum and count the bytes in a file
+.SS "ecryptfs"
+an enterprise-class cryptographic filesystem for linux
+.in +4n
+.nf
+.RB "$ " "mount -t ecryptfs /secret /secret" "  # Mount the encrypted directory"
+.fi
+.in
+.SS "id"
+print real and effective user and group IDs
+.SS "md5sum"
+compute and check MD5 message digest
+.SS "users"
+print the user names of users currently logged in to the current host
+.SS "w"
+show who is logged on and what they are doing
+.SS "who"
+show who is logged on
+.SS "wipe"
+secure file deletion utility
+
+
+
+
+.SH --- REVISION CONTROL, SCM
+.SS "svn"
+Subversion command line client tool
+.in +4n
+.nf
+.RB "$ " "svn status -u" "  # See what an update would do"
+.RB "$ " "svn revert -R *" "  # Revert all local changes"
+.fi
+.in
+
+
+
+
+.SH --- SYSTEM
+.SS "at, batch, atq, atrm"
+queue, examine or delete jobs for later execution
+.in +4n
+.nf
+.RB "$ " "echo ""ls -l"" | at midnight" "  # Execute task at given time"
+.fi
+.in
+.SS "htop"
+interactive process viewer
+.SS "free"
+display amount of free and used memory in the system
+.SS "top"
+display Linux tasks
+
+
+
+
+.SH --- TEXT PROCESSING
+.SS "cat"
+concatenate files and print on the standard output
+.SS "column"
+columnate lists
+.SS "csplit"
+split a file into sections determined by context lines
+.SS "cut"
+remove sections from each line of files
+.SS "diff"
+.in +4n
+.nf
+.RB "$ " "diff -u <(ls -c1 dir_1) <(ls -c1 dir_2)" "  # Will show you a diff of files in the root of dir_1 and dir_2"
+.fi
+.in
+compare files line by line
+.SS "echo"
+display a line of text
+.SS "expand"
+convert tabs to spaces
+.SS "fold"
+wrap each input line to fit in specified width
+.SS "getopt"
+parse command options (enhanced)
+.SS "grep, egrep, fgrep"
+print lines matching a pattern
+.SS "head"
+output the first part of files
+.SS "join"
+join lines of two files on a common field
+.SS "paste"
+merge lines of files
+.SS "patch"
+apply a diff file to an original
+.SS "printf"
+format and print data
+.SS "sed"
+stream editor for filtering and transforming text
+.SS "sort"
+sort lines of text files
+.SS "tail"
+output the last part of files
+.SS "tee"
+read from standard input and write to standard output and files
+.SS "tr"
+translate or delete characters
+.SS "unexpand"
+convert spaces to tabs
+.SS "wc"
+print newline, word, and byte counts for each file
